@@ -1,9 +1,11 @@
-package com.example.foods.service;
+package com.example.foods.service.impl;
 
 import com.example.foods.dto.FoodDto;
 import com.example.foods.entity.Food;
 import com.example.foods.mapper.FoodMapper;
 import com.example.foods.repository.FoodRepository;
+import com.example.foods.service.FoodService;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;

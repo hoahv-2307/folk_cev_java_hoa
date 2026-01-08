@@ -4,6 +4,8 @@ import com.example.foods.dto.FoodDto;
 import com.example.foods.entity.Food;
 import com.example.foods.mapper.FoodMapper;
 import com.example.foods.repository.FoodRepository;
+import com.example.foods.service.impl.FoodServiceImpl;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

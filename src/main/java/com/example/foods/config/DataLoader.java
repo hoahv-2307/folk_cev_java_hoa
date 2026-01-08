@@ -1,12 +1,15 @@
 package com.example.foods.config;
 
 import com.example.foods.entity.Food;
+import com.example.foods.entity.User;
 import com.example.foods.repository.FoodRepository;
+import com.example.foods.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 @Configuration
 @RequiredArgsConstructor
@@ -14,15 +17,31 @@ import org.springframework.context.annotation.Configuration;
 public class DataLoader {
     
     @Bean
-    CommandLineRunner initDatabase(FoodRepository repository) {
+    CommandLineRunner initDatabase(FoodRepository foodRepository, UserRepository userRepository, PasswordEncoder passwordEncoder) {
         return args -> {
             log.info("Loading sample data...");
             
-            // Check if data already exists
-            if (repository.count() > 0) {
+            if (foodRepository.count() > 0) {
                 log.info("Database already contains data, skipping initialization");
                 return;
             }
+            
+            User adminUser = User.builder()
+                    .username("admin")
+                    .email("admin@foods.com")
+                    .password(passwordEncoder.encode("admin123"))
+                    .role("ADMIN")
+                    .build();
+            
+            User regularUser = User.builder()
+                    .username("user")
+                    .email("user@foods.com")
+                    .password(passwordEncoder.encode("user123"))
+                    .role("USER")
+                    .build();
+            
+            userRepository.save(adminUser);
+            userRepository.save(regularUser);
             
             // Create sample food items
             Food pizza = Food.builder()
@@ -61,14 +80,16 @@ public class DataLoader {
                     .build();
             
             // Save sample data
-            repository.save(pizza);
-            repository.save(burger);
-            repository.save(sushi);
-            repository.save(pasta);
-            repository.save(tacos);
+            foodRepository.save(pizza);
+            foodRepository.save(burger);
+            foodRepository.save(sushi);
+            foodRepository.save(pasta);
+            foodRepository.save(tacos);
             
             log.info("Sample data loaded successfully!");
-            log.info("Total food items: {}", repository.count());
+            log.info("Total food items: {}", foodRepository.count());
+            log.info("Total users: {}", userRepository.count());
+            log.info("Demo users created - admin:admin123, user:user123");
         };
     }
 }

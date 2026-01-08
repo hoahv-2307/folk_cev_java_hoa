@@ -15,27 +15,15 @@ import java.util.List;
 )
 public interface FoodMapper {
     
-    /**
-     * Convert Food entity to FoodDto
-     */
     FoodDto toDto(Food food);
     
-    /**
-     * Convert FoodDto to Food entity
-     */
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
     Food toEntity(FoodDto foodDto);
     
-    /**
-     * Convert list of Food entities to list of FoodDtos
-     */
     List<FoodDto> toDtoList(List<Food> foods);
     
-    /**
-     * Update existing Food entity with data from FoodDto
-     */
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
