@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -37,12 +38,10 @@ public class UserServiceImpl implements UserService, UserDetailsService {
 
   @Override
   public UserResponseDto createUser(UserRequestDto userDto) {
-    // Check if username already exists
     if (userRepository.existsByUsername(userDto.getUsername())) {
-      throw new IllegalArgumentException("Username already exists: " + userDto.getUsername());
+      throw new UsernameNotFoundException("Username already exists: " + userDto.getUsername());
     }
     
-    // Check if email already exists
     if (userRepository.existsByEmail(userDto.getEmail())) {
       throw new IllegalArgumentException("Email already exists: " + userDto.getEmail());
     }
@@ -56,7 +55,10 @@ public class UserServiceImpl implements UserService, UserDetailsService {
 
   @Override
   public UserResponseDto getUserById(Long id) {
-    User user = userRepository.findById(id).orElse(null);
+    User user = userRepository.findById(id).orElseThrow(() -> {
+      log.warn("User with ID: {} not found", id);
+      return new UsernameNotFoundException("User not found with ID: " + id);
+    });
     return userMapper.toDto(user);
   }
 
@@ -68,12 +70,14 @@ public class UserServiceImpl implements UserService, UserDetailsService {
 
   @Override
   public UserResponseDto updateUser(Long id, UserRequestDto userDto) {
-    User user = userRepository.findById(id).orElse(null);
-    if (user == null) {
+    User user = userRepository.findById(id).orElseThrow(() -> {
       log.warn("User with ID: {} not found for update", id);
       throw new IllegalArgumentException("User not found with ID: " + id);
-    }
+    });
     userMapper.updateEntityFromDto(userDto, user);
+    if (userDto.getPassword() != null && !userDto.getPassword().isBlank()) {
+      user.setPassword(passwordEncoder.encode(userDto.getPassword()));
+    }
     user = userRepository.save(user);
     log.info("Updated user with ID: {}", user.getId());
     return userMapper.toDto(user);

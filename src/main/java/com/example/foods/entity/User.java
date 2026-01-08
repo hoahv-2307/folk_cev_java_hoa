@@ -15,21 +15,25 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
 
 @Entity
 @Table(name = "users")
-@Data
+@Getter
+@Setter
+@ToString(exclude = "password")
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class User implements UserDetails{
+public class User implements UserDetails {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
 
-  @Column(nullable = false)
+  @Column(nullable = false, unique = true)
   private String username;
 
   @Column(nullable = false)
@@ -43,7 +47,8 @@ public class User implements UserDetails{
 
   @Override
   public Collection<? extends GrantedAuthority> getAuthorities() {
-    return List.of(new SimpleGrantedAuthority(role));
+    String authorityRole = role != null && role.startsWith("ROLE_") ? role : "ROLE_" + role;
+    return List.of(new SimpleGrantedAuthority(authorityRole));
   }
 
   @Override

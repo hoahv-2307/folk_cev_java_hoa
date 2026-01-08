@@ -29,6 +29,7 @@
 
                     <!-- Registration Form -->
                     <form method="post" th:action="@{/register}" th:object="${user}" class="login-form">
+                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
                         <div class="mb-3">
                             <label for="username" class="form-label">
                                 <i class="fas fa-user me-2"></i>Username
