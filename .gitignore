@@ -120,7 +120,3 @@ log/
 .env.development.local
 .env.test.local
 .env.production.local
-
-# Sensitive configuration files
-*.env
-application-*.properties

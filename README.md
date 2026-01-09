@@ -1,12 +1,11 @@
 # Foods Application
 
-A Spring Boot application for managing food-related operations with web interface and PostgreSQL database.
+A Spring Boot application for managing food-related operations.
 
 ## Table of Contents
 - [About](#about)
 - [Technologies Used](#technologies-used)
 - [Prerequisites](#prerequisites)
-- [Environment Configuration](#environment-configuration)
 - [Getting Started](#getting-started)
 - [Running the Application](#running-the-application)
 - [API Documentation](#api-documentation)
@@ -17,25 +16,16 @@ A Spring Boot application for managing food-related operations with web interfac
 
 ## About
 
-This is a Spring Boot application built for food management operations. The project includes:
-- Beautiful Thymeleaf-based web interface with Bootstrap styling
-- PostgreSQL database integration
-- User authentication and authorization
-- RESTful APIs for food management
-- Docker support for easy deployment
-- Environment-based configuration
+This is a Spring Boot application built for food management operations. The project follows modern Spring Boot practices and includes Docker support for easy deployment.
 
 ## Technologies Used
 
 - **Java 21** - Programming language
 - **Spring Boot 4.0.1** - Main framework
-- **PostgreSQL** - Primary database
-- **Thymeleaf** - Server-side template engine
-- **Bootstrap 5** - Frontend styling framework
 - **Maven** - Build tool and dependency management
 - **Lombok** - Reduces boilerplate code with annotations
 - **MapStruct** - Object mapping between DTOs and entities
-- **Docker & Docker Compose** - Containerization
+- **Docker** - Containerization (see compose.yaml)
 
 ## Prerequisites
 
@@ -43,40 +33,7 @@ Before running this application, make sure you have the following installed:
 
 - Java 21 or higher
 - Maven 3.6+ (or use the included Maven wrapper)
-- Docker and Docker Compose (for database services)
-
-## Environment Configuration
-
-This application uses environment variables for sensitive configuration. Follow these steps:
-
-1. **Copy the environment template**
-   ```bash
-   cp .env.example .env
-   ```
-
-2. **Edit the .env file** with your actual values:
-   ```bash
-   # Database Configuration (matches compose.yaml)
-   DB_HOST=localhost
-   DB_PORT=5432
-   DB_NAME=mydatabase
-   DB_USERNAME=myuser
-   DB_PASSWORD=secret
-   
-   # OAuth2 Configuration (optional)
-   GOOGLE_CLIENT_ID=your_google_client_id_here
-   GOOGLE_CLIENT_SECRET=your_google_client_secret_here
-   ```
-
-3. **Available Environment Variables**:
-   - `DB_*` - Database connection settings
-   - `GOOGLE_CLIENT_*` - Google OAuth2 credentials (set to 'dummy' to disable)
-   - `JWT_SECRET` - Secret key for JWT tokens
-   - `MAIL_*` - Email configuration for notifications
-   - `REDIS_*` - Redis configuration
-   - `LOG_LEVEL` - Application logging level
-
-**Important**: Never commit the `.env` file to version control. It's included in `.gitignore`.
+- Docker and Docker Compose (optional, for containerized deployment)
 
 ## Getting Started
 
@@ -86,18 +43,7 @@ This application uses environment variables for sensitive configuration. Follow 
    cd cev_java_hoa
    ```
 
-2. **Set up environment configuration**
-   ```bash
-   cp .env.example .env
-   # Edit .env with your actual values
-   ```
-
-3. **Start the database services**
-   ```bash
-   docker compose up -d
-   ```
-
-4. **Build the project**
+2. **Build the project**
    ```bash
    ./mvnw clean install
    ```
@@ -109,17 +55,11 @@ This application uses environment variables for sensitive configuration. Follow 
 
 ## Running the Application
 
-### Using Maven (Recommended)
+### Using Maven
 
 ```bash
-# Start database services first
-docker compose up -d
-
-# Run the application
 ./mvnw spring-boot:run
 ```
-
-The application will be available at: http://localhost:8080
 
 ### Using Java
 
@@ -128,17 +68,13 @@ The application will be available at: http://localhost:8080
 java -jar target/foods-0.0.1-SNAPSHOT.jar
 ```
 
-## Web Interface
+### Using Docker Compose
 
-The application provides a modern web interface built with Thymeleaf and Bootstrap:
+```bash
+docker-compose up
+```
 
-### Features
-- Real-time search functionality
-- Category-based filtering
-- Price range filtering
-- Pagination support
-- Modern Bootstrap 5 styling
-- Accessible UI components
+The application will start on `http://localhost:8080` by default.
 
 ## API Documentation
 
@@ -174,6 +110,14 @@ This project includes GitHub Copilot instructions to help with consistent code g
 - File organization structure
 
 These instructions help Copilot provide more relevant suggestions tailored to this Spring Boot food management application.
+
+## Contributing
+
+1. Fork the project
+2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
 
 ## Project Structure
 
