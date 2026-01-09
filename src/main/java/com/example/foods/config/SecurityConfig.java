@@ -13,34 +13,33 @@ import org.springframework.security.web.SecurityFilterChain;
 @EnableWebSecurity
 public class SecurityConfig {
 
-    @Value("${app.csrf.enabled:true}")
-    private boolean csrfEnabled;
-  
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
-    }
+  @Value("${app.csrf.enabled:true}")
+  private boolean csrfEnabled;
 
-    @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        http
-            .csrf(csrf -> {
-                if (!csrfEnabled) {
-                    csrf.disable();
-                }
+  @Bean
+  public PasswordEncoder passwordEncoder() {
+    return new BCryptPasswordEncoder();
+  }
+
+  @Bean
+  public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    http.csrf(
+            csrf -> {
+              if (!csrfEnabled) {
+                csrf.disable();
+              }
             })
-            .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/login", "/register", "/css/**", "/js/**", "/images/**").permitAll()
-                .requestMatchers("/admin/**").hasRole("ADMIN")
-                .anyRequest().authenticated()
-            )
-            .formLogin(form -> form
-                .loginPage("/login")
-                .defaultSuccessUrl("/foods", true)
-                .permitAll()
-            )
-            .logout(logout -> logout.permitAll());
+        .authorizeHttpRequests(
+            auth ->
+                auth.requestMatchers("/login", "/register", "/css/**", "/js/**", "/images/**")
+                    .permitAll()
+                    .requestMatchers("/admin/**")
+                    .hasRole("ADMIN")
+                    .anyRequest()
+                    .authenticated())
+        .formLogin(form -> form.loginPage("/login").defaultSuccessUrl("/foods", true).permitAll())
+        .logout(logout -> logout.permitAll());
 
-        return http.build();
-    }
+    return http.build();
+  }
 }

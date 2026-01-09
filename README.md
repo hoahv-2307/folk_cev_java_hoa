@@ -128,26 +128,9 @@ The application will be available at: http://localhost:8080
 java -jar target/foods-0.0.1-SNAPSHOT.jar
 ```
 
-### Demo Users
-
-The application comes with pre-loaded demo users:
-- **Admin**: username=`admin`, password=`admin123`
-- **User**: username=`user`, password=`user123`
-
 ## Web Interface
 
 The application provides a modern web interface built with Thymeleaf and Bootstrap:
-
-### Login & Registration
-- **Login Page**: `/login` - Clean, responsive login form
-- **Registration**: `/register` - User registration form
-- **Authentication**: Form-based login with session management
-
-### Main Dashboard
-- **Foods List**: `/foods` - Comprehensive food management interface
-- **Search & Filter**: Search by name, filter by category and price range
-- **CRUD Operations**: Add, edit, delete food items
-- **Responsive Design**: Mobile-friendly interface
 
 ### Features
 - Real-time search functionality
@@ -191,14 +174,6 @@ This project includes GitHub Copilot instructions to help with consistent code g
 - File organization structure
 
 These instructions help Copilot provide more relevant suggestions tailored to this Spring Boot food management application.
-
-## Contributing
-
-1. Fork the project
-2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
 
 ## Project Structure
 
