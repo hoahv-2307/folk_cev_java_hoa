@@ -9,16 +9,15 @@ A Spring Boot application for managing food-related operations with web interfac
 - [Environment Configuration](#environment-configuration)
 - [Getting Started](#getting-started)
 - [Running the Application](#running-the-application)
-- [API Documentation](#api-documentation)
 - [Testing](#testing)
 - [Docker Support](#docker-support)
-- [GitHub Copilot Instructions](#github-copilot-instructions)
-- [Contributing](#contributing)
+- [CI/CD Pipeline](#cicd-pipeline)
+- [Project Structure](#project-structure)
 
 ## About
 
 This is a Spring Boot application built for food management operations. The project includes:
-- Beautiful Thymeleaf-based web interface with Bootstrap styling
+- Thymeleaf-based web interface with Bootstrap styling
 - PostgreSQL database integration
 - User authentication and authorization
 - RESTful APIs for food management
@@ -69,14 +68,14 @@ This application uses environment variables for sensitive configuration. Follow 
    ```
 
 3. **Available Environment Variables**:
-   - `DB_*` - Database connection settings
-   - `GOOGLE_CLIENT_*` - Google OAuth2 credentials (set to 'dummy' to disable)
-   - `JWT_SECRET` - Secret key for JWT tokens
-   - `MAIL_*` - Email configuration for notifications
-   - `REDIS_*` - Redis configuration
-   - `LOG_LEVEL` - Application logging level
+   - DB_* - Database connection settings
+   - GOOGLE_CLIENT_* - Google OAuth2 credentials (set to 'dummy' to disable)
+   - JWT_SECRET - Secret key for JWT tokens
+   - MAIL_* - Email configuration for notifications
+   - REDIS_* - Redis configuration
+   - LOG_LEVEL - Application logging level
 
-**Important**: Never commit the `.env` file to version control. It's included in `.gitignore`.
+**Important**: Never commit the .env file to version control. It's included in .gitignore.
 
 ## Getting Started
 
@@ -128,24 +127,135 @@ The application will be available at: http://localhost:8080
 java -jar target/foods-0.0.1-SNAPSHOT.jar
 ```
 
-## Web Interface
+## CI/CD Pipeline
 
-The application provides a modern web interface built with Thymeleaf and Bootstrap:
+This project includes a comprehensive CI/CD pipeline using GitHub Actions with the following features:
 
-### Features
-- Real-time search functionality
-- Category-based filtering
-- Price range filtering
-- Pagination support
-- Modern Bootstrap 5 styling
-- Accessible UI components
+### Continuous Integration (.github/workflows/ci.yml)
 
-## API Documentation
+**Automated Testing:**
+- Unit and integration tests with PostgreSQL and Redis services
+- Test coverage reporting and artifact upload
+- Multi-environment test configuration
 
-Once the application is running, you can access:
+**Code Quality:**
+- Maven Checkstyle validation
+- SpotBugs security analysis
+- SonarQube integration (configurable)
 
-- **Application**: http://localhost:8080
-- **Health Check**: http://localhost:8080/actuator/health (if actuator is configured)
+**Security Scanning:**
+- Trivy vulnerability scanner
+- SARIF upload to GitHub Security tab
+
+**Build & Package:**
+- Maven build with dependency caching
+- JAR artifact generation and upload
+- Docker image build and push to registry
+
+### Continuous Deployment (.github/workflows/deploy.yml)
+
+**Deployment Features:**
+- Tag-based production deployments (v*.*.*)
+- Manual workflow dispatch with environment selection
+- Zero-downtime deployment strategy
+- Automated rollback on failure
+- Health check validation
+
+**Infrastructure:**
+- Docker containerization with multi-stage builds
+- Production-ready Docker Compose configuration
+- NGINX reverse proxy with rate limiting
+- SSL/TLS support (configurable)
+
+### Monitoring & Health Checks
+
+**Built-in Monitoring:**
+- Spring Boot Actuator endpoints (/actuator/health, /actuator/metrics)
+- Docker health checks with automatic restart
+- NGINX health monitoring
+- Database and Redis connection monitoring
+
+### Setup Instructions
+
+**1. Repository Secrets Configuration**
+
+Add these secrets to your GitHub repository settings:
+
+```bash
+# Docker Registry
+DOCKER_USERNAME=your-docker-username
+DOCKER_PASSWORD=your-docker-password
+
+# Database Configuration
+DB_HOST=your-db-host
+DB_PORT=5432
+DB_NAME=your-database-name
+DB_USERNAME=your-db-username
+DB_PASSWORD=your-db-password
+
+# OAuth2 Configuration
+GOOGLE_CLIENT_ID=your-google-client-id
+GOOGLE_CLIENT_SECRET=your-google-client-secret
+
+# Security
+JWT_SECRET=your-jwt-secret-key-32-characters-minimum
+CSRF_ENABLED=true
+
+# Deployment Server
+DEPLOY_HOST=your-server-ip-or-domain
+DEPLOY_USER=your-server-username
+DEPLOY_SSH_KEY=your-private-ssh-key
+DEPLOY_PORT=22
+
+# Optional: Email & Redis
+MAIL_PASSWORD=your-email-password
+REDIS_PASSWORD=your-redis-password
+```
+
+**2. Server Preparation**
+
+Prepare your deployment server:
+
+```bash
+# Install Docker and Docker Compose
+sudo apt update && sudo apt install -y docker.io docker-compose
+
+# Create deployment directory
+sudo mkdir -p /opt/foods-app
+sudo chown $USER:$USER /opt/foods-app
+
+# Copy production files
+scp docker-compose.prod.yml nginx.conf user@server:/opt/foods-app/
+```
+
+**3. Deployment Process**
+
+- **Automatic**: Push tags like v1.0.0 for production deployment
+- **Manual**: Use GitHub Actions "Deploy to Production" workflow
+- **Monitoring**: Check /actuator/health endpoint for application status
+
+### Docker Commands
+
+**Local Development:**
+```bash
+# Build image
+docker build -t foods-app .
+
+# Run with Docker Compose
+docker-compose up -d
+```
+
+**Production Deployment:**
+```bash
+# Start production stack
+docker-compose -f docker-compose.prod.yml up -d
+
+# View logs
+docker-compose -f docker-compose.prod.yml logs -f foods-app
+
+# Scale application
+docker-compose -f docker-compose.prod.yml up -d --scale foods-app=3
+```
 
 ## Testing
 
@@ -157,23 +267,11 @@ Run the test suite using:
 
 ## Docker Support
 
-The project includes Docker support via `compose.yaml`. To run with Docker:
+The project includes Docker support via compose.yaml. To run with Docker:
 
 ```bash
 docker-compose up --build
 ```
-
-## GitHub Copilot Instructions
-
-This project includes GitHub Copilot instructions to help with consistent code generation and best practices. The instructions are located in `.github/copilot-instructions.md` and cover:
-
-- Project-specific coding standards
-- Architecture patterns to follow
-- Testing guidelines
-- Common dependencies and packages
-- File organization structure
-
-These instructions help Copilot provide more relevant suggestions tailored to this Spring Boot food management application.
 
 ## Project Structure
 
@@ -194,7 +292,5 @@ src/
     └── java/com/example/foods/
         └── FoodsApplicationTests.java
 ```
-
----
 
 **Note**: This README will be updated as the project evolves. Please check back for the latest information.

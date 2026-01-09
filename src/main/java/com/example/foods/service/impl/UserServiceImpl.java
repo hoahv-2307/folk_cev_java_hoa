@@ -90,6 +90,13 @@ public class UserServiceImpl implements UserService, UserDetailsService {
 
   @Override
   public void deleteUser(Long id) {
+    userRepository
+        .findById(id)
+        .orElseThrow(
+            () -> {
+              log.warn("User with ID: {} not found for deletion", id);
+              return new IllegalArgumentException("User not found with ID: " + id);
+            });
     userRepository.deleteById(id);
     log.info("Deleted user with ID: {}", id);
   }

@@ -5,6 +5,7 @@ This is a Spring Boot application for food management operations built with Java
 
 ## Common Rules
 - Do not add any comments that are not necessary for understanding the code
+- Do not add any emoji, icon to the generated code
 - Follow best practices for Spring Boot development
 - Ensure code is clean, maintainable, and well-documented
 - Write unit and integration tests for all new features
