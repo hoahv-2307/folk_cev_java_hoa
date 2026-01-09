@@ -16,7 +16,7 @@ public class DotEnvPropertyLoader
   @Override
   public void onApplicationEvent(ApplicationEnvironmentPreparedEvent event) {
     try {
-      Dotenv dotenv = Dotenv.configure().directory(".").filename(".env").load();
+      Dotenv dotenv = Dotenv.configure().directory(".").filename(".env").ignoreIfMissing().load();
 
       ConfigurableEnvironment environment = event.getEnvironment();
       Map<String, Object> envMap = new HashMap<>();
@@ -37,10 +37,13 @@ public class DotEnvPropertyLoader
         MapPropertySource propertySource = new MapPropertySource("dotenvProperties", envMap);
         environment.getPropertySources().addLast(propertySource);
         log.info("Successfully loaded {} properties from .env file", envMap.size());
+      } else {
+        log.debug("No .env properties to load or all properties already set by environment");
       }
 
     } catch (Exception e) {
       log.warn("Could not load .env file: {}", e.getMessage());
+      log.debug("Application will continue with existing environment variables");
     }
   }
 }

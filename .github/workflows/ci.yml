@@ -132,11 +132,11 @@ jobs:
 
     - name: Run tests
       if: steps.changes.outputs.java == 'true' || steps.changes.outputs.tests == 'true'
-      run: ./mvnw ${{ env.MAVEN_CLI_OPTS }} test -Dspring.profiles.active=test -Dmaven.test.failure.ignore=false -Dmaven.test.redirectTestOutputToFile=true
+      run: ./mvnw ${{ env.MAVEN_CLI_OPTS }} clean test -Dspring.profiles.active=test
 
     - name: Build and package application  
       if: steps.changes.outputs.java == 'true' || steps.changes.outputs.resources == 'true'
-      run: ./mvnw ${{ env.MAVEN_CLI_OPTS }} package -DskipTests -Dmaven.compile.fork=false -T 1C
+      run: ./mvnw ${{ env.MAVEN_CLI_OPTS }} package -DskipTests
 
     - name: Upload build artifact
       uses: actions/upload-artifact@v4
