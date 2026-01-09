@@ -77,6 +77,14 @@ This application uses environment variables for sensitive configuration. Follow 
 
 **Important**: Never commit the .env file to version control. It's included in .gitignore.
 
+### Database DDL Settings Explained
+
+- **`validate`** - Hibernate validates the schema matches entities but makes no changes
+- **`update`** - Hibernate updates the schema to match entities, preserves existing data
+- **`create-drop`** - Hibernate drops and recreates all tables on startup (DATA LOSS!)
+
+**CRITICAL**: Never use `create-drop` in production or with real data!
+
 ## Getting Started
 
 1. **Clone the repository**
@@ -106,133 +114,18 @@ This application uses environment variables for sensitive configuration. Follow 
    mvnw.cmd clean install
    ```
 
-## Running the Application
-
-### Using Maven (Recommended)
+### Using Maven Directly
 
 ```bash
 # Start database services first
 docker compose up -d
 
-# Run the application
-./mvnw spring-boot:run
+# Run with development profile (recommended)
+./mvnw spring-boot:run -Dspring-boot.run.profiles=dev
+
+# Run with production profile (default behavior)
+./mvnw spring-boot:run -Dspring-boot.run.profiles=prod
 ```
-
-The application will be available at: http://localhost:8080
-
-### Using Java
-
-```bash
-./mvnw clean package
-java -jar target/foods-0.0.1-SNAPSHOT.jar
-```
-
-## CI/CD Pipeline
-
-This project includes a comprehensive CI/CD pipeline using GitHub Actions with the following features:
-
-### Continuous Integration (.github/workflows/ci.yml)
-
-**Automated Testing:**
-- Unit and integration tests with PostgreSQL and Redis services
-- Test coverage reporting and artifact upload
-- Multi-environment test configuration
-
-**Code Quality:**
-- Maven Checkstyle validation
-- SpotBugs security analysis
-- SonarQube integration (configurable)
-
-**Security Scanning:**
-- Trivy vulnerability scanner
-- SARIF upload to GitHub Security tab
-
-**Build & Package:**
-- Maven build with dependency caching
-- JAR artifact generation and upload
-- Docker image build and push to registry
-
-### Continuous Deployment (.github/workflows/deploy.yml)
-
-**Deployment Features:**
-- Tag-based production deployments (v*.*.*)
-- Manual workflow dispatch with environment selection
-- Zero-downtime deployment strategy
-- Automated rollback on failure
-- Health check validation
-
-**Infrastructure:**
-- Docker containerization with multi-stage builds
-- Production-ready Docker Compose configuration
-- NGINX reverse proxy with rate limiting
-- SSL/TLS support (configurable)
-
-### Monitoring & Health Checks
-
-**Built-in Monitoring:**
-- Spring Boot Actuator endpoints (/actuator/health, /actuator/metrics)
-- Docker health checks with automatic restart
-- NGINX health monitoring
-- Database and Redis connection monitoring
-
-### Setup Instructions
-
-**1. Repository Secrets Configuration**
-
-Add these secrets to your GitHub repository settings:
-
-```bash
-# Docker Registry
-DOCKER_USERNAME=your-docker-username
-DOCKER_PASSWORD=your-docker-password
-
-# Database Configuration
-DB_HOST=your-db-host
-DB_PORT=5432
-DB_NAME=your-database-name
-DB_USERNAME=your-db-username
-DB_PASSWORD=your-db-password
-
-# OAuth2 Configuration
-GOOGLE_CLIENT_ID=your-google-client-id
-GOOGLE_CLIENT_SECRET=your-google-client-secret
-
-# Security
-JWT_SECRET=your-jwt-secret-key-32-characters-minimum
-CSRF_ENABLED=true
-
-# Deployment Server
-DEPLOY_HOST=your-server-ip-or-domain
-DEPLOY_USER=your-server-username
-DEPLOY_SSH_KEY=your-private-ssh-key
-DEPLOY_PORT=22
-
-# Optional: Email & Redis
-MAIL_PASSWORD=your-email-password
-REDIS_PASSWORD=your-redis-password
-```
-
-**2. Server Preparation**
-
-Prepare your deployment server:
-
-```bash
-# Install Docker and Docker Compose
-sudo apt update && sudo apt install -y docker.io docker-compose
-
-# Create deployment directory
-sudo mkdir -p /opt/foods-app
-sudo chown $USER:$USER /opt/foods-app
-
-# Copy production files
-scp docker-compose.prod.yml nginx.conf user@server:/opt/foods-app/
-```
-
-**3. Deployment Process**
-
-- **Automatic**: Push tags like v1.0.0 for production deployment
-- **Manual**: Use GitHub Actions "Deploy to Production" workflow
-- **Monitoring**: Check /actuator/health endpoint for application status
 
 ### Docker Commands
 
@@ -244,19 +137,6 @@ docker build -t foods-app .
 # Run with Docker Compose
 docker-compose up -d
 ```
-
-**Production Deployment:**
-```bash
-# Start production stack
-docker-compose -f docker-compose.prod.yml up -d
-
-# View logs
-docker-compose -f docker-compose.prod.yml logs -f foods-app
-
-# Scale application
-docker-compose -f docker-compose.prod.yml up -d --scale foods-app=3
-```
-
 ## Testing
 
 Run the test suite using:
