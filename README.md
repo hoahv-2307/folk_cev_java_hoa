@@ -155,7 +155,6 @@ docker-compose up --build
 
 ## Project Structure
 
-```
 src/
 ├── main/
 │   ├── java/com/example/foods/
@@ -171,6 +170,5 @@ src/
 └── test/
     └── java/com/example/foods/
         └── FoodsApplicationTests.java
-```
 
 **Note**: This README will be updated as the project evolves. Please check back for the latest information.
