@@ -9,16 +9,15 @@ A Spring Boot application for managing food-related operations with web interfac
 - [Environment Configuration](#environment-configuration)
 - [Getting Started](#getting-started)
 - [Running the Application](#running-the-application)
-- [API Documentation](#api-documentation)
 - [Testing](#testing)
 - [Docker Support](#docker-support)
-- [GitHub Copilot Instructions](#github-copilot-instructions)
-- [Contributing](#contributing)
+- [CI/CD Pipeline](#cicd-pipeline)
+- [Project Structure](#project-structure)
 
 ## About
 
 This is a Spring Boot application built for food management operations. The project includes:
-- Beautiful Thymeleaf-based web interface with Bootstrap styling
+- Thymeleaf-based web interface with Bootstrap styling
 - PostgreSQL database integration
 - User authentication and authorization
 - RESTful APIs for food management
@@ -69,14 +68,22 @@ This application uses environment variables for sensitive configuration. Follow 
    ```
 
 3. **Available Environment Variables**:
-   - `DB_*` - Database connection settings
-   - `GOOGLE_CLIENT_*` - Google OAuth2 credentials (set to 'dummy' to disable)
-   - `JWT_SECRET` - Secret key for JWT tokens
-   - `MAIL_*` - Email configuration for notifications
-   - `REDIS_*` - Redis configuration
-   - `LOG_LEVEL` - Application logging level
+   - DB_* - Database connection settings
+   - GOOGLE_CLIENT_* - Google OAuth2 credentials (set to 'dummy' to disable)
+   - JWT_SECRET - Secret key for JWT tokens
+   - MAIL_* - Email configuration for notifications
+   - REDIS_* - Redis configuration
+   - LOG_LEVEL - Application logging level
 
-**Important**: Never commit the `.env` file to version control. It's included in `.gitignore`.
+**Important**: Never commit the .env file to version control. It's included in .gitignore.
+
+### Database DDL Settings Explained
+
+- **`validate`** - Hibernate validates the schema matches entities but makes no changes
+- **`update`** - Hibernate updates the schema to match entities, preserves existing data
+- **`create-drop`** - Hibernate drops and recreates all tables on startup (DATA LOSS!)
+
+**CRITICAL**: Never use `create-drop` in production or with real data!
 
 ## Getting Started
 
@@ -107,46 +114,29 @@ This application uses environment variables for sensitive configuration. Follow 
    mvnw.cmd clean install
    ```
 
-## Running the Application
-
-### Using Maven (Recommended)
+### Using Maven Directly
 
 ```bash
 # Start database services first
 docker compose up -d
 
-# Run the application
-./mvnw spring-boot:run
+# Run with development profile (recommended)
+./mvnw spring-boot:run -Dspring-boot.run.profiles=dev
+
+# Run with production profile (default behavior)
+./mvnw spring-boot:run -Dspring-boot.run.profiles=prod
 ```
 
-The application will be available at: http://localhost:8080
+### Docker Commands
 
-### Using Java
-
+**Local Development:**
 ```bash
-./mvnw clean package
-java -jar target/foods-0.0.1-SNAPSHOT.jar
+# Build image
+docker build -t foods-app .
+
+# Run with Docker Compose
+docker-compose up -d
 ```
-
-## Web Interface
-
-The application provides a modern web interface built with Thymeleaf and Bootstrap:
-
-### Features
-- Real-time search functionality
-- Category-based filtering
-- Price range filtering
-- Pagination support
-- Modern Bootstrap 5 styling
-- Accessible UI components
-
-## API Documentation
-
-Once the application is running, you can access:
-
-- **Application**: http://localhost:8080
-- **Health Check**: http://localhost:8080/actuator/health (if actuator is configured)
-
 ## Testing
 
 Run the test suite using:
@@ -157,27 +147,14 @@ Run the test suite using:
 
 ## Docker Support
 
-The project includes Docker support via `compose.yaml`. To run with Docker:
+The project includes Docker support via compose.yaml. To run with Docker:
 
 ```bash
 docker-compose up --build
 ```
 
-## GitHub Copilot Instructions
-
-This project includes GitHub Copilot instructions to help with consistent code generation and best practices. The instructions are located in `.github/copilot-instructions.md` and cover:
-
-- Project-specific coding standards
-- Architecture patterns to follow
-- Testing guidelines
-- Common dependencies and packages
-- File organization structure
-
-These instructions help Copilot provide more relevant suggestions tailored to this Spring Boot food management application.
-
 ## Project Structure
 
-```
 src/
 ├── main/
 │   ├── java/com/example/foods/
@@ -193,8 +170,5 @@ src/
 └── test/
     └── java/com/example/foods/
         └── FoodsApplicationTests.java
-```
-
----
 
 **Note**: This README will be updated as the project evolves. Please check back for the latest information.

@@ -1,0 +1,165 @@
+name: CI Pipeline
+
+on:
+  pull_request:
+    branches: [ master ]
+
+env:
+  JAVA_VERSION: '21'
+  MAVEN_OPTS: '-Dmaven.repo.local=.m2/repository -Xmx1024m -XX:+TieredCompilation -XX:TieredStopAtLevel=1'
+  MAVEN_CLI_OPTS: '--batch-mode --errors --fail-at-end --show-version'
+  DB_HOST: localhost
+  DB_PORT: 5432
+  DB_NAME: testdb
+  DB_USERNAME: testuser
+  DB_PASSWORD: testpass
+  REDIS_HOST: localhost
+  REDIS_PORT: 6379
+  REDIS_PASSWORD: ""
+  GOOGLE_CLIENT_ID: mock-client-id
+  GOOGLE_CLIENT_SECRET: mock-client-secret
+  CSRF_ENABLED: false
+  JWT_SECRET: mock_jwt_secret_key_for_testing_at_least_32_characters_long
+  MAIL_PASSWORD: mock-password
+
+jobs:
+  test-and-build:
+    name: Test and Build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_DB: testdb
+          POSTGRES_USER: testuser
+          POSTGRES_PASSWORD: testpass
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 1  # Shallow clone for faster checkout
+
+    - name: Check for changes
+      id: changes
+      uses: dorny/paths-filter@v2
+      with:
+        filters: |
+          java:
+            - 'src/**/*.java'
+            - 'pom.xml'
+          resources:
+            - 'src/main/resources/**'
+          tests:
+            - 'src/test/**'
+
+    - name: Set up JDK ${{ env.JAVA_VERSION }}
+      uses: actions/setup-java@v4
+      with:
+        java-version: ${{ env.JAVA_VERSION }}
+        distribution: 'temurin'
+        cache: 'maven'
+
+    - name: Cache Maven dependencies
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.m2/repository
+          target/
+        key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}-${{ hashFiles('src/**/*.java') }}
+        restore-keys: |
+          ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}-
+          ${{ runner.os }}-maven-
+
+    - name: Cache compiled classes
+      uses: actions/cache@v4
+      with:
+        path: |
+          target/classes/
+          target/generated-sources/
+          target/maven-status/
+        key: ${{ runner.os }}-classes-${{ hashFiles('src/main/**/*.java', 'pom.xml') }}
+        restore-keys: |
+          ${{ runner.os }}-classes-
+
+    - name: Create mock environment file
+      run: |
+        cat << EOF > .env
+        DB_HOST=${{ env.DB_HOST }}
+        DB_PORT=${{ env.DB_PORT }}
+        DB_NAME=${{ env.DB_NAME }}
+        DB_USERNAME=${{ env.DB_USERNAME }}
+        DB_PASSWORD=${{ env.DB_PASSWORD }}
+        REDIS_HOST=${{ env.REDIS_HOST }}
+        REDIS_PORT=${{ env.REDIS_PORT }}
+        REDIS_PASSWORD=${{ env.REDIS_PASSWORD }}
+        GOOGLE_CLIENT_ID=${{ env.GOOGLE_CLIENT_ID }}
+        GOOGLE_CLIENT_SECRET=${{ env.GOOGLE_CLIENT_SECRET }}
+        CSRF_ENABLED=${{ env.CSRF_ENABLED }}
+        JWT_SECRET=${{ env.JWT_SECRET }}
+        MAIL_PASSWORD=${{ env.MAIL_PASSWORD }}
+        EOF
+
+    - name: Make Maven wrapper executable
+      run: chmod +x ./mvnw
+
+    - name: Wait for services to be ready
+      run: |
+        echo "Waiting for PostgreSQL to be ready..."
+        timeout 60s bash -c 'until nc -z localhost 5432; do sleep 2; done'
+        echo "Waiting for Redis to be ready..."  
+        timeout 60s bash -c 'until nc -z localhost 6379; do sleep 2; done'
+        echo "All services are ready!"
+
+    - name: Initialize database and load test data
+      run: |
+        echo "Initializing database schema and loading test data..."
+        ./mvnw ${{ env.MAVEN_CLI_OPTS }} spring-boot:run \
+          -Dspring.profiles.active=test \
+          -Dspring-boot.run.jvmArguments="-Dspring.main.web-application-type=none" \
+          -Dspring.main.web-application-type=none \
+          -q &
+        
+        # Wait for DataLoader to complete (it should be quick)
+        sleep 15
+        
+        # Kill the Spring Boot process since we only needed it for DataLoader
+        pkill -f "spring-boot:run" || true
+        
+        echo "Database initialization completed!"
+
+    - name: Run tests
+      if: steps.changes.outputs.java == 'true' || steps.changes.outputs.tests == 'true' || steps.changes.outputs.resources == 'true'
+      run: ./mvnw ${{ env.MAVEN_CLI_OPTS }} test -Dspring.profiles.active=test -Dmaven.test.failure.ignore=false -Dmaven.test.redirectTestOutputToFile=true
+
+    - name: Build and package application  
+      if: steps.changes.outputs.java == 'true' || steps.changes.outputs.resources == 'true'
+      run: ./mvnw ${{ env.MAVEN_CLI_OPTS }} package -DskipTests -Dmaven.compile.fork=false -T 1C
+
+    - name: Upload build artifact
+      uses: actions/upload-artifact@v4
+      if: success() && (steps.changes.outputs.java == 'true' || steps.changes.outputs.resources == 'true')
+      with:
+        name: foods-app-${{ github.sha }}
+        path: target/*.jar
+        retention-days: 30
+        compression-level: 9
