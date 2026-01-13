@@ -25,7 +25,7 @@ public class UserServiceImpl implements UserService, UserDetailsService {
 
   @Override
   public UserDetails loadUserByUsername(String username) {
-    User user = userRepository.findByUsername(username);
+    User user = userRepository.findByUsername(username).orElse(null);
     if (user == null) {
       log.warn("User with username: {} not found", username);
       throw new IllegalArgumentException("User not found with username: " + username);

@@ -31,9 +31,14 @@ public class WebController {
   public String login(
       @RequestParam(value = "error", required = false) String error,
       @RequestParam(value = "logout", required = false) String logout,
+      @RequestParam(value = "message", required = false) String message,
       Model model) {
     if (error != null) {
-      model.addAttribute("errorMessage", "Invalid username or password!");
+      if ("oauth2".equals(error) && message != null) {
+        model.addAttribute("errorMessage", message.replace("%20", " "));
+      } else {
+        model.addAttribute("errorMessage", "Invalid username or password!");
+      }
     }
     if (logout != null) {
       model.addAttribute("message", "You have been logged out successfully.");
