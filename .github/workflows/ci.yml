@@ -130,6 +130,23 @@ jobs:
         timeout 60s bash -c 'until nc -z localhost 6379; do sleep 2; done'
         echo "All services are ready!"
 
+    - name: Initialize database and load test data
+      run: |
+        echo "Initializing database schema and loading test data..."
+        ./mvnw ${{ env.MAVEN_CLI_OPTS }} spring-boot:run \
+          -Dspring.profiles.active=test \
+          -Dspring-boot.run.jvmArguments="-Dspring.main.web-application-type=none" \
+          -Dspring.main.web-application-type=none \
+          -q &
+        
+        # Wait for DataLoader to complete (it should be quick)
+        sleep 15
+        
+        # Kill the Spring Boot process since we only needed it for DataLoader
+        pkill -f "spring-boot:run" || true
+        
+        echo "Database initialization completed!"
+
     - name: Run tests
       if: steps.changes.outputs.java == 'true' || steps.changes.outputs.tests == 'true' || steps.changes.outputs.resources == 'true'
       run: ./mvnw ${{ env.MAVEN_CLI_OPTS }} test -Dspring.profiles.active=test -Dmaven.test.failure.ignore=false -Dmaven.test.redirectTestOutputToFile=true
