@@ -5,6 +5,8 @@ import com.example.foods.dto.response.UserResponseDto;
 import com.example.foods.service.FoodService;
 import com.example.foods.service.UserService;
 import jakarta.validation.Valid;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.security.Principal;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -35,7 +37,7 @@ public class WebController {
       Model model) {
     if (error != null) {
       if ("oauth2".equals(error) && message != null) {
-        model.addAttribute("errorMessage", message.replace("%20", " "));
+        model.addAttribute("errorMessage", URLDecoder.decode(message, StandardCharsets.UTF_8));
       } else {
         model.addAttribute("errorMessage", "Invalid username or password!");
       }

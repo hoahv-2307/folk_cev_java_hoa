@@ -1,6 +1,6 @@
 package com.example.foods.controller;
 
-import com.example.foods.service.CustomOAuth2User;
+import com.example.foods.service.CustomOidcUser;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -25,14 +25,13 @@ public class AuthController {
 
     log.info("Current authenticated user: {}", principal.getName());
 
-    if (principal instanceof CustomOAuth2User customUser) {
+    if (principal instanceof CustomOidcUser customUser) {
       return ResponseEntity.ok()
           .body(
               Map.of(
-                  "id", customUser.getId(),
                   "username", customUser.getName(),
                   "email", customUser.getEmail(),
-                  "role", customUser.getRole()));
+                  "attributes", customUser.getAttributes()));
     }
 
     return ResponseEntity.ok()

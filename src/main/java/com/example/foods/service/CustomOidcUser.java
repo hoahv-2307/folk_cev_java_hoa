@@ -18,7 +18,6 @@ public class CustomOidcUser implements OidcUser, Serializable {
   private final User user;
   private final Map<String, Object> attributes;
 
-  // Make idToken transient to avoid serialization issues
   private transient OidcIdToken idToken;
 
   public CustomOidcUser(User user, Map<String, Object> attributes, OidcIdToken idToken) {
@@ -29,13 +28,12 @@ public class CustomOidcUser implements OidcUser, Serializable {
 
   @Override
   public Map<String, Object> getClaims() {
-    // Return attributes if idToken is null (after deserialization)
     return idToken != null ? idToken.getClaims() : attributes;
   }
 
   @Override
   public OidcUserInfo getUserInfo() {
-    return null; // We don't use UserInfo endpoint
+    return null;
   }
 
   @Override
@@ -58,7 +56,6 @@ public class CustomOidcUser implements OidcUser, Serializable {
     return user.getUsername();
   }
 
-  // Custom method to get the User entity
   public User getUser() {
     return user;
   }

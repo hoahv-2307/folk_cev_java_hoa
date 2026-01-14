@@ -18,7 +18,6 @@ public class FoodController {
 
   private final FoodService foodService;
 
-  /** Create a new food item */
   @PostMapping
   public ResponseEntity<FoodDto> createFood(@Valid @RequestBody FoodDto foodDto) {
     log.info("REST request to create food: {}", foodDto.getName());
@@ -26,7 +25,6 @@ public class FoodController {
     return new ResponseEntity<>(createdFood, HttpStatus.CREATED);
   }
 
-  /** Get all food items */
   @GetMapping
   public ResponseEntity<List<FoodDto>> getAllFoods() {
     log.info("REST request to get all foods");
@@ -34,7 +32,6 @@ public class FoodController {
     return ResponseEntity.ok(foods);
   }
 
-  /** Get food by ID */
   @GetMapping("/{id}")
   public ResponseEntity<FoodDto> getFoodById(@PathVariable Long id) {
     log.info("REST request to get food with ID: {}", id);
@@ -42,7 +39,6 @@ public class FoodController {
     return ResponseEntity.ok(food);
   }
 
-  /** Update existing food */
   @PutMapping("/{id}")
   public ResponseEntity<FoodDto> updateFood(
       @PathVariable Long id, @Valid @RequestBody FoodDto foodDto) {
@@ -51,7 +47,6 @@ public class FoodController {
     return ResponseEntity.ok(updatedFood);
   }
 
-  /** Delete food by ID */
   @DeleteMapping("/{id}")
   public ResponseEntity<Void> deleteFood(@PathVariable Long id) {
     log.info("REST request to delete food with ID: {}", id);
@@ -59,7 +54,6 @@ public class FoodController {
     return ResponseEntity.noContent().build();
   }
 
-  /** Get foods by category */
   @GetMapping("/category/{category}")
   public ResponseEntity<List<FoodDto>> getFoodsByCategory(@PathVariable String category) {
     log.info("REST request to get foods by category: {}", category);
@@ -67,7 +61,6 @@ public class FoodController {
     return ResponseEntity.ok(foods);
   }
 
-  /** Search foods by name */
   @GetMapping("/search")
   public ResponseEntity<List<FoodDto>> searchFoodsByName(@RequestParam String name) {
     log.info("REST request to search foods by name: {}", name);
@@ -75,7 +68,6 @@ public class FoodController {
     return ResponseEntity.ok(foods);
   }
 
-  /** Get foods by price range */
   @GetMapping("/price-range")
   public ResponseEntity<List<FoodDto>> getFoodsByPriceRange(
       @RequestParam Double minPrice, @RequestParam Double maxPrice) {

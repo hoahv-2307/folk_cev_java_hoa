@@ -1,5 +1,6 @@
-package com.example.foods.config;
+package com.example.foods.service.impl;
 
+import com.example.foods.constant.SecurityConstants;
 import com.example.foods.entity.User;
 import com.example.foods.repository.UserRepository;
 import com.example.foods.service.CustomOidcUser;
@@ -17,7 +18,7 @@ import org.springframework.stereotype.Service;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class CustomOidcUserService extends OidcUserService {
+public class OidcUserServiceImpl extends OidcUserService {
 
   private final UserRepository userRepository;
   private final PasswordEncoder passwordEncoder;
@@ -31,7 +32,6 @@ public class CustomOidcUserService extends OidcUserService {
     } catch (Exception ex) {
       log.error("Error processing OIDC user", ex);
 
-      // If there's a sub attribute error, try to handle it manually
       if (ex.getMessage() != null && ex.getMessage().contains("sub")) {
         log.warn("Handling sub attribute error manually");
         return handleSubError(userRequest);
@@ -42,22 +42,17 @@ public class CustomOidcUserService extends OidcUserService {
   }
 
   private OidcUser handleSubError(OidcUserRequest userRequest) {
-    // Get user info directly from the access token
     Map<String, Object> attributes = new HashMap<>();
 
-    // Add some default values
     String email = (String) userRequest.getIdToken().getClaims().get("email");
     String name = (String) userRequest.getIdToken().getClaims().get("name");
     String sub = (String) userRequest.getIdToken().getClaims().get("sub");
 
-    if (email != null)
-      attributes.put("email", email);
-    if (name != null)
-      attributes.put("name", name);
+    if (email != null) attributes.put("email", email);
+    if (name != null) attributes.put("name", name);
     if (sub != null) {
       attributes.put("sub", sub);
     } else {
-      // Use email as fallback for sub
       attributes.put("sub", email != null ? email : "unknown");
     }
 
@@ -111,7 +106,6 @@ public class CustomOidcUserService extends OidcUserService {
       throw new OAuth2AuthenticationException("Unable to extract username from OIDC user data");
     }
 
-    // Ensure username is unique
     String originalUsername = username;
     int counter = 1;
     while (userRepository.findByUsername(username).isPresent()) {
@@ -119,12 +113,13 @@ public class CustomOidcUserService extends OidcUserService {
       counter++;
     }
 
-    User user = User.builder()
-        .username(username)
-        .email(email)
-        .password(passwordEncoder.encode("oauth2_user"))
-        .role("USER")
-        .build();
+    User user =
+        User.builder()
+            .username(username)
+            .email(email)
+            .password(passwordEncoder.encode(SecurityConstants.DEFAULT_OAUTH2_PASSWORD))
+            .role("USER")
+            .build();
 
     user = userRepository.save(user);
     log.info("New OIDC user created with email: {}", email);

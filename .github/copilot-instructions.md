@@ -10,7 +10,7 @@ Spring Boot 4.0.1 application with Java 21 for food management featuring:
 - Environment-based configuration via `.env` files
 
 ## Code Style Rules
-- No unnecessary comments, emojis, or icons in generated code
+- No comments, emojis, or icons in generated code
 - Use Java 21 features when beneficial
 - Follow camelCase (methods/variables), PascalCase (classes)
 - Lombok for boilerplate reduction (@RequiredArgsConstructor, @Slf4j, @Data/@Builder)

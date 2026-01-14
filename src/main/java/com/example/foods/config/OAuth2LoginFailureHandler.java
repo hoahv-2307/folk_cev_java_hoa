@@ -28,7 +28,7 @@ public class OAuth2LoginFailureHandler extends SimpleUrlAuthenticationFailureHan
       } else if (exception.getMessage().contains("Unable to extract username")) {
         errorMessage = "Unable to get user information from Google. Please try again.";
       } else {
-        errorMessage = "Google login failed: " + exception.getMessage();
+        errorMessage = "Google login failed: Unexpected error occurred.";
       }
     }
 
