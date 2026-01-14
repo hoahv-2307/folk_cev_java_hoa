@@ -1,87 +1,143 @@
 # GitHub Copilot Instructions for Foods Application
 
-## Project Context
-This is a Spring Boot application for food management operations built with Java 21 and Spring Boot 4.0.1.
+## Project Overview
+Spring Boot 4.0.1 application with Java 21 for food management featuring:
+- PostgreSQL database with JPA/Hibernate
+- OAuth2 (Google) + form-based authentication
+- Thymeleaf templates with Bootstrap UI
+- Redis session management
+- RESTful APIs + web controllers
+- Environment-based configuration via `.env` files
 
-## Common Rules
-- Do not add any comments that are not necessary for understanding the code
-- Do not add any emoji, icon to the generated code
-- Follow best practices for Spring Boot development
-- Ensure code is clean, maintainable, and well-documented
-- Write unit and integration tests for all new features
-- Use dependency injection wherever possible
-- Handle exceptions gracefully and provide meaningful error messages
+## Code Style Rules
+- No comments, emojis, or icons in generated code
+- Use Java 21 features when beneficial
+- Follow camelCase (methods/variables), PascalCase (classes)
+- Lombok for boilerplate reduction (@RequiredArgsConstructor, @Slf4j, @Data/@Builder)
+- Constructor injection via @RequiredArgsConstructor (not @Autowired fields)
 
-## Code Style Guidelines
-- Use Java 21 features when appropriate
-- Follow Spring Boot best practices
-- Use meaningful variable and method names
-- Add proper JavaDoc comments for public methods
-- Follow standard Java naming conventions (camelCase for methods/variables, PascalCase for classes)
+## Architecture & Key Patterns
 
-## Architecture Guidelines
-- Follow MVC pattern with Controllers, Services, and Repositories
-- Use Spring annotations (@RestController, @Service, @Repository)
-- Implement proper exception handling
-- Use DTOs for API requests/responses
-- Follow RESTful API conventions
+### Dual Controller Pattern
+This app serves both REST APIs and web pages:
+- **REST**: `@RestController` at `/api/*` returning `ResponseEntity<DTO>` (see [FoodController.java](src/main/java/com/example/foods/controller/FoodController.java))
+- **Web**: `@Controller` returning view names for Thymeleaf (see [WebController.java](src/main/java/com/example/foods/controller/WebController.java))
 
-## Testing Guidelines
-- Write unit tests using JUnit 5
-- Use @SpringBootTest for integration tests
-- Mock external dependencies with @MockBean
-- Aim for good test coverage
-- Test both positive and negative scenarios
+### Service Layer with Interfaces
+Services follow interface + implementation pattern:
+- Interface: [FoodService.java](src/main/java/com/example/foods/service/FoodService.java)
+- Implementation: [FoodServiceImpl.java](src/main/java/com/example/foods/service/impl/FoodServiceImpl.java) with `@Service @Transactional`
 
-## Common Patterns to Use
-- Use @Autowired for dependency injection
-- Implement validation with @Valid and validation annotations
-- Use ResponseEntity for API responses
-- Implement proper logging with SLF4J
-- Use @Transactional for database operations
-- Use Lombok annotations (@Data, @Entity, @Builder, etc.) to reduce boilerplate
-- Use MapStruct for mapping between DTOs and entities
-- Create mapper interfaces with @Mapper(componentModel = "spring")
+### Entity Patterns
+Entities use Lombok but with specific combinations (see [Food.java](src/main/java/com/example/foods/entity/Food.java), [User.java](src/main/java/com/example/foods/entity/User.java)):
+- `@Entity @Data @Builder @NoArgsConstructor @AllArgsConstructor` for simple entities
+- `@ToString(exclude = "password")` for sensitive fields
+- `@PrePersist/@PreUpdate` for timestamp management
+- User entity implements `UserDetails` for Spring Security integration
 
-## Lombok Guidelines
-- Use @Data for simple POJOs (combines @Getter, @Setter, @ToString, @EqualsAndHashCode)
-- Use @Entity with @Data for JPA entities
-- Use @Builder for complex object creation
-- Use @Slf4j for logging instead of manual logger creation
-- Use @RequiredArgsConstructor for dependency injection
-- Use @Value for immutable objects
-- Avoid @Data on entities with bidirectional relationships (use @Getter/@Setter instead)
+### MapStruct Configuration
+Mappers use specific settings (see [FoodMapper.java](src/main/java/com/example/foods/mapper/FoodMapper.java)):
+```java
+@Mapper(
+    componentModel = "spring",
+    nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
+```
+- Always ignore `id`, `createdAt`, `updatedAt` in entity mappings
+- Provide `toDtoList()` for collection conversions
+- Use `updateEntityFromDto(@MappingTarget)` for updates
 
-## MapStruct Guidelines
-- Create mapper interfaces in `com.example.foods.mapper` package
-- Use @Mapper(componentModel = "spring") to integrate with Spring
-- Use @Mapping annotations for custom field mappings
-- Handle null values with nullValueMappingStrategy
-- Use @InheritInverseConfiguration for reverse mappings
-- Create separate mappers for each entity-DTO pair
-- Use qualifiedByName for complex mappings
+### Exception Handling
+Centralized via [GlobalExceptionHandler.java](src/main/java/com/example/foods/exception/GlobalExceptionHandler.java):
+- `@RestControllerAdvice` with `@ExceptionHandler` methods
+- Returns [ErrorResponse.java](src/main/java/com/example/foods/exception/ErrorResponse.java) with timestamp, path, status
+- Handles `IllegalArgumentException`, `MethodArgumentNotValidException`, generic exceptions
 
-## Dependencies to Consider
-- Spring Boot Starter Web (already included)
-- Spring Boot Starter Data JPA (for database operations)
-- Spring Boot Starter Validation (for input validation)
-- Spring Boot Starter Test (already included)
-- H2 Database (for development/testing)
-- Lombok (already included) - for reducing boilerplate code
-- MapStruct (already included) - for object mapping between DTOs and entities
+### Security Architecture
+OAuth2 + form login hybrid (see [SecurityConfig.java](src/main/java/com/example/foods/config/SecurityConfig.java)):
+- Custom [CustomOidcUser.java](src/main/java/com/example/foods/service/CustomOidcUser.java) wraps User entity, implements OAuth2User
+- [OidcUserServiceImpl.java](src/main/java/com/example/foods/service/impl/OidcUserServiceImpl.java) handles OAuth2 user creation/retrieval
+- Role-based authorization: `/admin/**` requires `ROLE_ADMIN`
+- CSRF configurable via `app.csrf.enabled` property
 
-## File Organization
-- Controllers in `com.example.foods.controller` package
-- Services in `com.example.foods.service` package
-- Repositories in `com.example.foods.repository` package
-- DTOs in `com.example.foods.dto` package
-- Entities in `com.example.foods.entity` package
-- Mappers in `com.example.foods.mapper` package
+## Environment Configuration
 
-## Common Tasks
-When helping with this project, focus on:
-- Creating CRUD operations for food items
-- Implementing proper error handling
-- Adding input validation
-- Writing comprehensive tests
-- Following Spring Boot security best practices
+### .env File System
+Uses custom [DotEnvPropertyLoader.java](src/main/java/com/example/foods/config/DotEnvPropertyLoader.java) registered in [META-INF/spring.factories](src/main/resources/META-INF/spring.factories):
+- Loads `.env` at application startup before Spring context
+- Only sets properties not already in environment (system env takes precedence)
+- Required variables: `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USERNAME`, `DB_PASSWORD`
+- Optional: `GOOGLE_CLIENT_ID/SECRET`, `CSRF_ENABLED`, `LOG_LEVEL`
+
+### Profile-Based Configuration
+Three profiles with different safety levels:
+- **dev** ([application-dev.properties](src/main/resources/application-dev.properties)): `ddl-auto=update`, verbose SQL logging, CSRF disabled by default
+- **prod** ([application-prod.properties](src/main/resources/application-prod.properties)): `ddl-auto=validate`, minimal logging, CSRF enabled, Docker Compose disabled
+- **test**: Auto-activated in tests, uses H2 in-memory database
+
+**CRITICAL**: Never use `create-drop` outside tests - causes data loss!
+
+## Development Workflows
+
+### Running the Application
+```bash
+# Start dependencies (PostgreSQL + Redis)
+docker compose up -d
+
+# Run with dev profile (recommended for development)
+./mvnw spring-boot:run -Dspring-boot.run.profiles=dev
+
+# Run tests (uses H2, not PostgreSQL)
+./mvnw test
+```
+
+### Build Considerations
+Maven compiler plugin processes annotations in order:
+1. Lombok (generates getters/setters/constructors)
+2. MapStruct (uses Lombok-generated methods)
+3. lombok-mapstruct-binding (ensures compatibility)
+
+Rebuild after changing entities/DTOs: `./mvnw clean compile`
+
+### Code Formatting
+Project uses Spotify fmt-maven-plugin (Google Java Format):
+- Auto-formats on compile: `./mvnw compile`
+- Manual format: `./mvnw fmt:format`
+
+## Testing Patterns
+See [FoodServiceImplTest.java](src/test/java/com/example/foods/service/FoodServiceImplTest.java):
+- `@ExtendWith(MockitoExtension.class)` for unit tests
+- Mock dependencies with `@Mock`, inject with `@InjectMocks`
+- Use AssertJ assertions: `assertThat()`, `assertThatThrownBy()`
+- Test happy path + exceptions (e.g., duplicate names, not found)
+
+## Dependencies & Integration
+
+### Key Dependencies
+- **PostgreSQL**: Primary database (H2 for tests only)
+- **Redis**: Session storage (`spring-session-data-redis`)
+- **Sentry**: Error monitoring (v8.27.0)
+- **Actuator**: Health/metrics at `/actuator/*` (limited in prod)
+- **Thymeleaf**: Server-side templates with Spring Security extras
+
+### Package Structure
+```
+com.example.foods/
+├── FoodsApplication.java
+├── config/           # Security, data loading, .env handling
+├── controller/       # REST (@RestController) + Web (@Controller)
+├── dto/              # Request/response DTOs with validation
+│   ├── request/
+│   └── response/
+├── entity/           # JPA entities
+├── exception/        # Global exception handling
+├── mapper/           # MapStruct interfaces
+├── repository/       # Spring Data JPA repositories
+└── service/          # Business logic (interface + impl/)
+```
+
+## Common Anti-Patterns to Avoid
+- Don't use `@Data` on User entity (has `@ToString(exclude = "password")` for security)
+- Don't skip `@Transactional(readOnly = true)` on query-only service methods
+- Don't hardcode OAuth2 credentials (use .env file)
+- Don't expose `User` entity directly - use DTOs or custom OAuth2User wrapper
+- Don't forget MapStruct's annotation processor path in pom.xml
