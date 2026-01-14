@@ -54,8 +54,8 @@ Centralized via [GlobalExceptionHandler.java](src/main/java/com/example/foods/ex
 
 ### Security Architecture
 OAuth2 + form login hybrid (see [SecurityConfig.java](src/main/java/com/example/foods/config/SecurityConfig.java)):
-- Custom [CustomOAuth2User.java](src/main/java/com/example/foods/service/CustomOAuth2User.java) wraps User entity, implements OAuth2User
-- [CustomOAuth2UserService.java](src/main/java/com/example/foods/service/CustomOAuth2UserService.java) handles OAuth2 user creation/retrieval
+- Custom [CustomOidcUser.java](src/main/java/com/example/foods/service/CustomOidcUser.java) wraps User entity, implements OAuth2User
+- [OidcUserServiceImpl.java](src/main/java/com/example/foods/service/impl/OidcUserServiceImpl.java) handles OAuth2 user creation/retrieval
 - Role-based authorization: `/admin/**` requires `ROLE_ADMIN`
 - CSRF configurable via `app.csrf.enabled` property
 

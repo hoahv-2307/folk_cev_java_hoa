@@ -18,7 +18,7 @@ public class CustomOidcUser implements OidcUser, Serializable {
   private final User user;
   private final Map<String, Object> attributes;
 
-  private transient OidcIdToken idToken;
+  private OidcIdToken idToken;
 
   public CustomOidcUser(User user, Map<String, Object> attributes, OidcIdToken idToken) {
     this.user = user;

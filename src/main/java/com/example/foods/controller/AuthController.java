@@ -30,7 +30,7 @@ public class AuthController {
           .body(
               Map.of(
                   "username", customUser.getName(),
-                  "email", customUser.getEmail(),
+                  "email", customUser.getUser().getEmail(),
                   "attributes", customUser.getAttributes()));
     }
 
