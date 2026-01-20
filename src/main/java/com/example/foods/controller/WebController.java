@@ -89,11 +89,4 @@ public class WebController {
 
     return hasAdminRole ? "admin/foods" : "user/foods";
   }
-
-  @GetMapping("/admin/foods")
-  public String adminFoodsPage(Model model, Principal principal) {
-    model.addAttribute("foods", foodService.getAllFoods());
-    model.addAttribute("username", principal.getName());
-    return "admin/foods";
-  }
 }
