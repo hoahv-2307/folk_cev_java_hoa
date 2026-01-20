@@ -41,7 +41,7 @@ public class FoodController {
 
   @PutMapping("/{id}")
   public ResponseEntity<FoodDto> updateFood(
-      @PathVariable Long id, @Valid @RequestBody FoodDto foodDto) {
+      @PathVariable Long id, @Valid @ModelAttribute("food") FoodDto foodDto) {
     log.info("REST request to update food with ID: {}", id);
     FoodDto updatedFood = foodService.updateFood(id, foodDto);
     return ResponseEntity.ok(updatedFood);

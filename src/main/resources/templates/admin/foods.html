@@ -18,7 +18,7 @@
                         <h1 class="h3 mb-0">Foods Management</h1>
                         <p class="text-muted">Manage your restaurant's menu items</p>
                     </div>
-                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addFoodModal">
+                    <button class="btn btn-primary" id="add-food-btn">
                         <i class="fas fa-plus me-2"></i>Add New Food
                     </button>
                 </div>
@@ -152,10 +152,10 @@
                                             <strong class="text-success">$<span th:text="${food.price}">0.00</span></strong>
                                         </td>
                                         <td>
-                                            <button class="btn btn-sm btn-outline-primary me-1" title="Edit">
+                                            <button class="btn btn-sm btn-outline-primary me-1" th:data-food-id="${food.id}" title="Edit">
                                                 <i class="fas fa-edit"></i>
                                             </button>
-                                            <button class="btn btn-sm btn-outline-danger" title="Delete">
+                                            <button class="btn btn-sm btn-outline-danger" th:data-food-id="${food.id}" title="Delete">
                                                 <i class="fas fa-trash"></i>
                                             </button>
                                         </td>
@@ -172,12 +172,12 @@
     <!-- Toast Container -->
     <div class="toast-container" id="toastContainer"></div>
 
-    <!-- Add Food Modal -->
-    <div th:replace="~{fragments/admin/admin-add-food :: add-food-modal(null)}"></div>
+    <!--  Food Modal -->
+    <div id="foodModalContainer"></div>
 
     <!-- Scripts -->
+    <div th:replace="~{fragments/common/common-libs-script :: common-libs-script}"></div>
     <div th:replace="~{fragments/common/common-script :: common-script}"></div>
     <div th:replace="~{fragments/admin/admin-foods-scripts :: admin-foods-scripts}"></div>
-    <div th:replace="~{fragments/admin/admin-add-foods-scripts :: admin-add-foods-scripts}"></div>
 </body>
 </html>

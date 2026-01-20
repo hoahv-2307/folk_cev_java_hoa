@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
   <head>
     <meta charset="UTF-8" />
@@ -6,7 +6,7 @@
   <body>
     <!-- Admin JavaScript functionality fragment -->
     <script th:fragment="admin-add-foods-scripts">
-      document.addEventListener("DOMContentLoaded", function () {
+      (function () {
         const form = document.getElementById("addFoodForm");
 
         if (form) {
@@ -14,7 +14,7 @@
             e.preventDefault();
 
             const submitBtn = document.querySelector(
-              'button[form="addFoodForm"]'
+              'button[form="addFoodForm"]',
             );
             const formData = new FormData(form);
             const actionUrl = form.action;
@@ -23,10 +23,15 @@
             const originalText = submitBtn.innerHTML;
             submitBtn.innerHTML =
               '<i class="fas fa-spinner fa-spin me-2"></i>Saving...';
+            const methodInput = form.querySelector('input[name="_method"]');
+            const method =
+              methodInput != null
+                ? methodInput.value.toUpperCase()
+                : 'POST';
 
             $.ajax({
               url: actionUrl,
-              method: "POST",
+              method: method,
               data: formData,
               processData: false,
               contentType: false,
@@ -44,7 +49,7 @@
                   "Food " +
                     (formData.get("id") ? "updated" : "added") +
                     " successfully!",
-                  "success"
+                  "success",
                 );
 
                 setTimeout(() => {
@@ -68,7 +73,7 @@
             });
           });
         }
-      });
+      })();
     </script>
   </body>
 </html>
