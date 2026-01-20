@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/common/common-libs-script :: common-head('Food Menu - Foods App')}">
+</head>
+<head>
+    <div th:replace="~{fragments/user/user-styles :: user-styles}"></div>
+</head>
+<body>
+    <!-- Navigation -->
+    <div th:replace="~{fragments/user/user-header :: user-header}"></div>
+
+    <!-- Search and Filter Section -->
+    <div th:replace="~{fragments/user/user-search :: user-search}"></div>
+
+    <!-- Food Grid -->
+    <div class="container mb-5">
+        <div class="row" id="foodGrid">
+            <div th:each="food : ${foods}" class="col-lg-4 col-md-6 mb-4 food-item" 
+                 th:data-category="${food.category}" th:data-price="${food.price}" 
+                 th:data-name="${food.name}" th:data-id="${food.id}">
+                <div class="card meal-card position-relative h-100">
+                    <div class="card-body p-4">
+                        <!-- Price Badge -->
+                        <div class="price-badge">$<span th:text="${food.price}">0.00</span></div>
+                        
+                        <!-- Category Tag -->
+                        <span class="category-tag" th:text="${food.category}">Category</span>
+                        
+                        <!-- Food Info -->
+                        <h5 class="card-title mt-3 mb-2" th:text="${food.name}">Food Name</h5>
+                        <p class="card-text text-muted mb-4" th:text="${food.description}">Description</p>
+                        
+                        <!-- Action Buttons -->
+                        <div class="action-buttons">
+                            <button class="btn btn-outline-danger btn-sm favorite-btn" 
+                                    th:data-id="${food.id}"
+                                    onclick="toggleFavorite(this)">
+                                <i class="fas fa-heart"></i>
+                            </button>
+                            <button class="btn btn-primary btn-sm" 
+                                    th:data-id="${food.id}" 
+                                    th:data-name="${food.name}" 
+                                    th:data-price="${food.price}"
+                                    onclick="addToCartFromButton(this)">
+                                <i class="fas fa-plus me-1"></i>Add
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Empty State -->
+        <div class="text-center py-5" id="emptyState" style="display: none;">
+            <i class="fas fa-search fa-3x text-muted mb-3"></i>
+            <h5 class="text-muted">No foods found</h5>
+            <p class="text-muted">Try adjusting your search or filter criteria</p>
+        </div>
+    </div>
+
+    <!-- Cart Sidebar and Toast -->
+    <div th:replace="~{fragments/user/user-cart :: user-cart}"></div>
+
+    <!-- Scripts -->
+    <div th:replace="~{fragments/user/user-scripts :: user-scripts}"></div>
+    <div th:replace="~{fragments/common/common-script :: common-script}"></div>
+</body>
+</html>

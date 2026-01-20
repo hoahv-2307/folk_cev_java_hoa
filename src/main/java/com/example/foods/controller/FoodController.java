@@ -19,7 +19,7 @@ public class FoodController {
   private final FoodService foodService;
 
   @PostMapping
-  public ResponseEntity<FoodDto> createFood(@Valid @RequestBody FoodDto foodDto) {
+  public ResponseEntity<FoodDto> createFood(@Valid @ModelAttribute("food") FoodDto foodDto) {
     log.info("REST request to create food: {}", foodDto.getName());
     FoodDto createdFood = foodService.createFood(foodDto);
     return new ResponseEntity<>(createdFood, HttpStatus.CREATED);

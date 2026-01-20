@@ -10,6 +10,7 @@ import java.nio.charset.StandardCharsets;
 import java.security.Principal;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -78,9 +79,14 @@ public class WebController {
   }
 
   @GetMapping("/foods")
-  public String showFoodsPage(Model model, Principal principal) {
+  public String showFoodsPage(Model model, Principal principal, Authentication authentication) {
     model.addAttribute("foods", foodService.getAllFoods());
     model.addAttribute("username", principal.getName());
-    return "foods/list";
+
+    boolean hasAdminRole =
+        authentication.getAuthorities().stream()
+            .anyMatch(authority -> authority.getAuthority().equals("ROLE_ADMIN"));
+
+    return hasAdminRole ? "admin/foods" : "user/foods";
   }
 }

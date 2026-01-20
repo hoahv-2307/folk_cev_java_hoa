@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+</head>
+<body>
+    <!-- Admin JavaScript functionality fragment -->
+    <script th:fragment="admin-foods-scripts">
+        (function(){
+          const searchInput = document.getElementById("searchInput");
+          const categoryFilter = document.getElementById("categoryFilter");
+          const rowsSelector = ".food-row";
+
+          if (searchInput) {
+            searchInput.addEventListener("keyup", function (e) {
+              const searchTerm = e.target.value.toLowerCase();
+              const rows = document.querySelectorAll(rowsSelector);
+
+              rows.forEach((row) => {
+                const text = row.textContent.toLowerCase();
+                row.style.display = text.includes(searchTerm) ? "" : "none";
+              });
+            });
+          }
+
+          if (categoryFilter) {
+            const applyCategoryFilter = function(e) {
+              const category = e.target.value;
+              const rows = document.querySelectorAll(rowsSelector);
+              rows.forEach((row) => {
+                if (category === "" || row.textContent.includes(category)) {
+                  row.style.display = "";
+                } else {
+                  row.style.display = "none";
+                }
+              });
+            };
+            categoryFilter.addEventListener("change", applyCategoryFilter);
+          }
+
+          document.querySelectorAll(".btn-outline-primary").forEach((btn) => {
+            btn.addEventListener("click", function () {
+              const row = this.closest("tr");
+              if(!row) return;
+              const id = row.cells[0] ? row.cells[0].textContent : '';
+              const name = row.cells[1] ? row.cells[1].textContent.trim() : '';
+              const description = row.cells[2] ? row.cells[2].textContent.trim() : '';
+              const category = row.cells[3] ? row.cells[3].textContent.trim() : '';
+              const price = row.cells[4] ? row.cells[4].textContent.replace("$", "").trim() : '';
+
+              const nameEl = document.getElementById("foodName");
+              const descEl = document.getElementById("foodDescription");
+              const catEl = document.getElementById("foodCategory");
+              const priceEl = document.getElementById("foodPrice");
+
+              if(nameEl) nameEl.value = name;
+              if(descEl) descEl.value = description;
+              if(catEl) catEl.value = category;
+              if(priceEl) priceEl.value = price;
+
+              const modalEl = document.getElementById("addFoodModal");
+              if(modalEl && typeof bootstrap !== 'undefined'){
+                const modal = new bootstrap.Modal(modalEl);
+                modal.show();
+              }
+            });
+          });
+        })();
+    </script>
+</body>
+</html>
