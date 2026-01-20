@@ -70,7 +70,7 @@
                         <div class="mb-3">
                             <label for="foodPrice" class="form-label">Price ($) <span
                                     class="text-danger">*</span></label>
-                            <input type="number" class="form-control" id="foodPrice" name="price" step="0.1" min="0"
+                            <input type="number" class="form-control" id="foodPrice" name="price" step="0.01" min="0"
                                 th:value="${food != null} ? ${food.price} : ''" required />
                         </div>
                     </form>
@@ -88,8 +88,8 @@
                 </div>
             </div>
         </div>
-    <div th:replace="~{fragments/admin/admin-add-foods-scripts :: admin-add-foods-scripts}"></div>
     </div>
+    <div th:replace="~{fragments/admin/admin-add-foods-scripts :: admin-add-foods-scripts}"></div>
 </body>
 
 </html>
