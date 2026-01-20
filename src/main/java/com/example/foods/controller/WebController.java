@@ -89,4 +89,18 @@ public class WebController {
 
     return hasAdminRole ? "admin/foods" : "user/foods";
   }
+
+  @GetMapping("/admin/foods/edit/{id}")
+  public String showEditFoodPage(@PathVariable Long id, Model model) {
+    model.addAttribute("food", foodService.getFoodById(id));
+    log.info("Navigating to edit food page for food ID: {}", id);
+    return "fragments/admin/admin-add-food :: add-food-modal";
+  }
+
+  @GetMapping("/admin/foods/create")
+  public String showCreateFoodPage(Model model) {
+    model.addAttribute("food", null);
+    log.info("Navigating to create food page");
+    return "fragments/admin/admin-add-food :: add-food-modal";
+  }
 }

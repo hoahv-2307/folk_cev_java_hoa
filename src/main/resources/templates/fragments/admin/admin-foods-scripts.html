@@ -38,31 +38,60 @@
             categoryFilter.addEventListener("change", applyCategoryFilter);
           }
 
+          document.getElementById("add-food-btn").addEventListener("click", function () {
+            fetch("/admin/foods/create")
+              .then((response) => response.text())
+              .then((html) => {
+                const modalContainer = document.getElementById("foodModalContainer");
+                modalContainer.innerHTML = html;
+                
+                const scripts = modalContainer.querySelectorAll("script");
+                scripts.forEach((script) => {
+                  const newScript = document.createElement("script");
+                  if (script.src) {
+                    newScript.src = script.src;
+                  } else {
+                    newScript.textContent = script.textContent;
+                  }
+                  document.head.appendChild(newScript);
+                  setTimeout(() => document.head.removeChild(newScript), 100);
+                });
+                
+                const addFoodModal = new bootstrap.Modal(
+                  modalContainer.querySelector("#addFoodModal")
+                );
+                addFoodModal.show();
+              })
+              .catch((error) => console.error("Error loading add modal:", error));
+          });
+
           document.querySelectorAll(".btn-outline-primary").forEach((btn) => {
             btn.addEventListener("click", function () {
-              const row = this.closest("tr");
-              if(!row) return;
-              const id = row.cells[0] ? row.cells[0].textContent : '';
-              const name = row.cells[1] ? row.cells[1].textContent.trim() : '';
-              const description = row.cells[2] ? row.cells[2].textContent.trim() : '';
-              const category = row.cells[3] ? row.cells[3].textContent.trim() : '';
-              const price = row.cells[4] ? row.cells[4].textContent.replace("$", "").trim() : '';
-
-              const nameEl = document.getElementById("foodName");
-              const descEl = document.getElementById("foodDescription");
-              const catEl = document.getElementById("foodCategory");
-              const priceEl = document.getElementById("foodPrice");
-
-              if(nameEl) nameEl.value = name;
-              if(descEl) descEl.value = description;
-              if(catEl) catEl.value = category;
-              if(priceEl) priceEl.value = price;
-
-              const modalEl = document.getElementById("addFoodModal");
-              if(modalEl && typeof bootstrap !== 'undefined'){
-                const modal = new bootstrap.Modal(modalEl);
-                modal.show();
-              }
+              const foodId = this.getAttribute("data-food-id");
+              fetch(`/admin/foods/edit/${foodId}`)
+                .then((response) => response.text())
+                .then((html) => {
+                  const modalContainer = document.getElementById("foodModalContainer");
+                  modalContainer.innerHTML = html;
+                  
+                  const scripts = modalContainer.querySelectorAll("script");
+                  scripts.forEach((script) => {
+                    const newScript = document.createElement("script");
+                    if (script.src) {
+                      newScript.src = script.src;
+                    } else {
+                      newScript.textContent = script.textContent;
+                    }
+                    document.head.appendChild(newScript);
+                    setTimeout(() => document.head.removeChild(newScript), 100);
+                  });
+                  
+                  const addFoodModal = new bootstrap.Modal(
+                    modalContainer.querySelector("#addFoodModal")
+                  );
+                  addFoodModal.show();
+                })
+                .catch((error) => console.error("Error loading edit modal:", error));
             });
           });
         })();

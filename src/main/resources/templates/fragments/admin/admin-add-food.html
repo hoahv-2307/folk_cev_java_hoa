@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 
 <head>
@@ -21,7 +21,8 @@
                 </div>
                 <div class="modal-body">
                     <form id="addFoodForm"
-                        th:action="${food != null} ? @{/api/foods/{id}(id=${food.id})} : @{/api/foods}" method="post">
+                        th:action="${food != null} ? @{/api/foods/{id}(id=${food.id})} : @{/api/foods}"
+                        th:method="${food != null} ? 'put' : 'post'">
                         <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
                         <input type="hidden" name="id" th:if="${food != null}" th:value="${food.id}" />
 
@@ -32,7 +33,7 @@
                             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                         </div>
                         <div class="mb-3">
-                            <label for="foodName" class="form-label">Name</label>
+                            <label for="foodName" class="form-label">Name <span class="text-danger">*</span></label>
                             <input type="text" class="form-control" id="foodName" name="name"
                                 th:value="${food != null} ? ${food.name} : ''" required />
                         </div>
@@ -44,7 +45,8 @@
                         </div>
 
                         <div class="mb-3">
-                            <label for="foodCategory" class="form-label">Category</label>
+                            <label for="foodCategory" class="form-label">Category <span
+                                    class="text-danger">*</span></label>
                             <select class="form-select" id="foodCategory" name="category" required>
                                 <option value="">Select category</option>
                                 <option value="Italian" th:selected="${food != null and food.category == 'Italian'}">
@@ -66,7 +68,8 @@
                         </div>
 
                         <div class="mb-3">
-                            <label for="foodPrice" class="form-label">Price ($)</label>
+                            <label for="foodPrice" class="form-label">Price ($) <span
+                                    class="text-danger">*</span></label>
                             <input type="number" class="form-control" id="foodPrice" name="price" step="0.01" min="0"
                                 th:value="${food != null} ? ${food.price} : ''" required />
                         </div>
@@ -86,6 +89,7 @@
             </div>
         </div>
     </div>
+    <div th:replace="~{fragments/admin/admin-add-foods-scripts :: admin-add-foods-scripts}"></div>
 </body>
 
 </html>
