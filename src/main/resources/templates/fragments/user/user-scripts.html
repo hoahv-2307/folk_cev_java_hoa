@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+</head>
+<body>
+    <!-- User JavaScript functionality fragment -->
+    <script th:fragment="user-scripts">
+        // Initialize data
+        let cart = JSON.parse(localStorage.getItem('foodCart') || '[]');
+        let favorites = JSON.parse(localStorage.getItem('foodFavorites') || '[]');
+
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', function() {
+            updateCartDisplay();
+            updateFavoritesDisplay();
+        });
+
+        // Search and filter functionality
+        document.getElementById('searchInput').addEventListener('keyup', filterFoods);
+        document.getElementById('categoryFilter').addEventListener('change', filterFoods);
+        document.getElementById('priceSort').addEventListener('change', sortFoods);
+
+        function filterFoods() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const category = document.getElementById('categoryFilter').value;
+            const foodItems = document.querySelectorAll('.food-item');
+            let visibleCount = 0;
+
+            foodItems.forEach(item => {
+                const name = item.dataset.name.toLowerCase();
+                const itemCategory = item.dataset.category;
+                
+                const matchesSearch = name.includes(searchTerm);
+                const matchesCategory = !category || itemCategory === category;
+                
+                if (matchesSearch && matchesCategory) {
+                    item.style.display = '';
+                    visibleCount++;
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+
+            document.getElementById('emptyState').style.display = visibleCount === 0 ? 'block' : 'none';
+        }
+
+        function sortFoods() {
+            const sortOrder = document.getElementById('priceSort').value;
+            if (!sortOrder) return;
+
+            const container = document.getElementById('foodGrid');
+            const items = Array.from(container.querySelectorAll('.food-item'));
+            
+            items.sort((a, b) => {
+                const priceA = parseFloat(a.dataset.price);
+                const priceB = parseFloat(b.dataset.price);
+                return sortOrder === 'asc' ? priceA - priceB : priceB - priceA;
+            });
+
+            items.forEach(item => container.appendChild(item));
+        }
+
+        function addToCartFromButton(btn) {
+            const id = parseInt(btn.dataset.id);
+            const name = btn.dataset.name;
+            const price = parseFloat(btn.dataset.price);
+            addToCart(id, name, price);
+        }
+
+        function addToCart(id, name, price) {
+            const existingItem = cart.find(item => item.id === id);
+            
+            if (existingItem) {
+                existingItem.quantity += 1;
+            } else {
+                cart.push({ id, name, price, quantity: 1 });
+            }
+            
+            localStorage.setItem('foodCart', JSON.stringify(cart));
+            updateCartDisplay();
+            showToast(`${name} added to cart!`, 'success');
+        }
+
+        function toggleFavorite(btn) {
+            const id = parseInt(btn.dataset.id);
+            const index = favorites.indexOf(id);
+            
+            if (index > -1) {
+                favorites.splice(index, 1);
+                btn.classList.remove('active');
+                showToast('Removed from favorites', 'info');
+            } else {
+                favorites.push(id);
+                btn.classList.add('active');
+                showToast('Added to favorites!', 'success');
+            }
+            
+            localStorage.setItem('foodFavorites', JSON.stringify(favorites));
+        }
+
+        function updateFavoritesDisplay() {
+            document.querySelectorAll('.favorite-btn').forEach(btn => {
+                const id = parseInt(btn.dataset.id);
+                if (favorites.includes(id)) {
+                    btn.classList.add('active');
+                }
+            });
+        }
+
+        function updateCartDisplay() {
+            const counter = document.getElementById('cartCounter');
+            const total = cart.reduce((sum, item) => sum + item.quantity, 0);
+            
+            // Update counter
+            if (total > 0) {
+                counter.textContent = total;
+                counter.style.display = 'flex';
+            } else {
+                counter.style.display = 'none';
+            }
+            
+            updateCartSidebar();
+        }
+
+        function updateCartSidebar() {
+            const cartItems = document.getElementById('cartItems');
+            const cartFooter = document.getElementById('cartFooter');
+            const cartTotal = document.getElementById('cartTotal');
+            
+            if (cart.length === 0) {
+                cartItems.innerHTML = `
+                    <div class="empty-cart">
+                        <i class="fas fa-shopping-cart fa-3x mb-3"></i>
+                        <p>Your cart is empty</p>
+                        <small class="text-muted">Add some delicious items to get started!</small>
+                    </div>
+                `;
+                cartFooter.style.display = 'none';
+                return;
+            }
+            
+            let html = '';
+            let total = 0;
+            
+            cart.forEach(item => {
+                const itemTotal = item.price * item.quantity;
+                total += itemTotal;
+                
+                html += `
+                    <div class="cart-item">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <h6 class="mb-1">${item.name}</h6>
+                            <button class="btn btn-sm btn-outline-danger" onclick="removeFromCart(${item.id})">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <small class="text-muted">$${item.price.toFixed(2)} each</small>
+                            <div class="quantity-control">
+                                <button class="quantity-btn" onclick="changeQuantity(${item.id}, -1)">-</button>
+                                <span class="fw-bold">${item.quantity}</span>
+                                <button class="quantity-btn" onclick="changeQuantity(${item.id}, 1)">+</button>
+                            </div>
+                        </div>
+                        <div class="text-end mt-2">
+                            <strong>$${itemTotal.toFixed(2)}</strong>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            cartItems.innerHTML = html;
+            cartTotal.textContent = total.toFixed(2);
+            cartFooter.style.display = 'block';
+        }
+
+        function changeQuantity(id, delta) {
+            const item = cart.find(item => item.id === id);
+            if (!item) return;
+            
+            item.quantity += delta;
+            
+            if (item.quantity <= 0) {
+                removeFromCart(id);
+                return;
+            }
+            
+            localStorage.setItem('foodCart', JSON.stringify(cart));
+            updateCartDisplay();
+        }
+
+        function removeFromCart(id) {
+            const index = cart.findIndex(item => item.id === id);
+            if (index > -1) {
+                const itemName = cart[index].name;
+                cart.splice(index, 1);
+                localStorage.setItem('foodCart', JSON.stringify(cart));
+                updateCartDisplay();
+                showToast(`${itemName} removed from cart`, 'info');
+            }
+        }
+
+        function clearCart() {
+            if (cart.length === 0) return;
+            
+            if (confirm('Are you sure you want to clear your cart?')) {
+                cart = [];
+                localStorage.setItem('foodCart', JSON.stringify(cart));
+                updateCartDisplay();
+                showToast('Cart cleared', 'info');
+            }
+        }
+
+        function toggleCart() {
+            const sidebar = new bootstrap.Offcanvas(document.getElementById('cartSidebar'));
+            sidebar.show();
+        }
+
+        function checkout() {
+            if (cart.length === 0) {
+                showToast('Your cart is empty!', 'warning');
+                return;
+            }
+            
+            const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            showToast(`Checkout total: $${total.toFixed(2)} - Feature coming soon!`, 'info');
+        }
+    </script>
+</body>
+</html>

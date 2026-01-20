@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8" />
+</head>
+<body>
+    <!-- Common JavaScript functionality fragment -->
+    <script th:fragment="common-script">
+      function showToast(message, type = "success") {
+        const toastContainer = document.getElementById("toastContainer");
+        const toastId = "toast-" + Date.now();
+
+        const iconClass =
+          {
+            success: "fas fa-check-circle",
+            info: "fas fa-info-circle",
+            warning: "fas fa-exclamation-triangle",
+            danger: "fas fa-times-circle",
+          }[type] || "fas fa-info-circle";
+
+        const bgColor =
+          {
+            success: "#28a745",
+            info: "#17a2b8",
+            warning: "#ffc107",
+            danger: "#dc3545",
+          }[type] || "#28a745";
+
+        const toast = document.createElement("div");
+        toast.id = toastId;
+        toast.className = "custom-toast";
+        toast.style.backgroundColor = bgColor;
+        toast.innerHTML = `
+                <div class="d-flex align-items-center">
+                    <i class="${iconClass} me-2"></i>
+                    <span>${message}</span>
+                    <button class="btn-close btn-close-white ms-auto" onclick="removeToast('${toastId}')"></button>
+                </div>
+            `;
+
+        toastContainer.appendChild(toast);
+
+        // Auto remove after 3 seconds
+        setTimeout(() => {
+          removeToast(toastId);
+        }, 3000);
+      }
+
+      function removeToast(toastId) {
+        const toast = document.getElementById(toastId);
+        if (toast) {
+          toast.remove();
+        }
+      }
+    </script>
+</body>
+</html>

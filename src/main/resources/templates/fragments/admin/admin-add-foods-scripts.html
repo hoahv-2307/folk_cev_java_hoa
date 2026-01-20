@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+  <head>
+    <meta charset="UTF-8" />
+  </head>
+  <body>
+    <!-- User JavaScript functionality fragment -->
+    <script th:fragment="admin-add-foods-scripts">
+      document.addEventListener("DOMContentLoaded", function () {
+        const form = document.getElementById("addFoodForm");
+
+        if (form) {
+          form.addEventListener("submit", function (e) {
+            e.preventDefault();
+
+            const submitBtn = document.querySelector(
+              'button[form="addFoodForm"]'
+            );
+            const formData = new FormData(form);
+            const actionUrl = form.action;
+
+            submitBtn.disabled = true;
+            const originalText = submitBtn.innerHTML;
+            submitBtn.innerHTML =
+              '<i class="fas fa-spinner fa-spin me-2"></i>Saving...';
+
+            $.ajax({
+              url: actionUrl,
+              method: "POST",
+              data: formData,
+              processData: false,
+              contentType: false,
+              headers: {
+                "X-Requested-With": "XMLHttpRequest",
+              },
+              success: function (response) {
+                const modalEl = document.getElementById("addFoodModal");
+                const modal =
+                  bootstrap.Modal.getInstance(modalEl) ||
+                  new bootstrap.Modal(modalEl);
+                modal.hide();
+
+                showToast(
+                  "Food " +
+                    (formData.get("id") ? "updated" : "added") +
+                    " successfully!",
+                  "success"
+                );
+
+                setTimeout(() => {
+                  window.location.reload();
+                }, 1500);
+              },
+              error: function (xhr, status, error) {
+                const errorMsg =
+                  xhr.responseJSON && xhr.responseJSON.message
+                    ? xhr.responseJSON.message
+                    : "An error occurred while processing your request.";
+                const errorDiv = $("#foodFormError");
+                errorDiv.attr("visible", "true");
+                errorDiv.find("span").text(errorMsg);
+                errorDiv.show();
+              },
+              complete: function () {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalText;
+              },
+            });
+          });
+        }
+      });
+    </script>
+  </body>
+</html>

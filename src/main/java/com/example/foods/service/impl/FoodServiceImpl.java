@@ -65,7 +65,6 @@ public class FoodServiceImpl implements FoodService {
             .findById(id)
             .orElseThrow(() -> new IllegalArgumentException("Food not found with ID: " + id));
 
-    // Check if another food with the same name exists (excluding current food)
     if (!existingFood.getName().equalsIgnoreCase(foodDto.getName())
         && foodRepository.existsByNameIgnoreCase(foodDto.getName())) {
       throw new IllegalArgumentException(
