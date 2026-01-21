@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/common/common-libs-script :: common-head('My Profile - Foods App')}">
+</head>
+<head>
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding-bottom: 50px;
+        }
+        .profile-container {
+            margin-top: 30px;
+        }
+        .profile-card {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            padding: 30px;
+            margin-bottom: 20px;
+        }
+        .profile-header {
+            text-align: center;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #f0f0f0;
+            margin-bottom: 30px;
+        }
+        .profile-avatar {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            color: white;
+            font-size: 48px;
+            font-weight: bold;
+        }
+        .section-title {
+            color: #667eea;
+            font-weight: bold;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .stat-number {
+            font-size: 36px;
+            font-weight: bold;
+        }
+        .stat-label {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        .order-item {
+            border: 1px solid #e9ecef;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+            transition: transform 0.2s;
+        }
+        .order-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .status-badge {
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .status-pending {
+            background: #ffc107;
+            color: #000;
+        }
+        .status-completed {
+            background: #28a745;
+            color: white;
+        }
+        .status-cancelled {
+            background: #dc3545;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div th:replace="~{fragments/user/user-header :: user-header}"></div>
+
+    <div class="container profile-container">
+        <div class="row">
+            <div class="col-lg-4">
+                <div class="profile-card">
+                    <div class="profile-header">
+                        <div class="profile-avatar" th:text="${username.substring(0,1).toUpperCase()}">U</div>
+                        <h4 th:text="${username}">Username</h4>
+                        <p class="text-muted" th:text="${userEmail}">user@example.com</p>
+                        <button class="btn btn-primary btn-sm mt-2" data-bs-toggle="modal" data-bs-target="#editProfileModal">
+                            <i class="fas fa-edit me-1"></i>Edit Profile
+                        </button>
+                    </div>
+                    
+                    <h5 class="section-title">
+                        <i class="fas fa-chart-bar"></i>Statistics
+                    </h5>
+                    
+                    <div class="stat-card">
+                        <div class="stat-number" th:text="${totalOrders}">0</div>
+                        <div class="stat-label">Total Orders</div>
+                    </div>
+                    
+                    <div class="stat-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                        <div class="stat-number" th:text="${cartItemCount}">0</div>
+                        <div class="stat-label">Items in Cart</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-8">
+                <div class="profile-card">
+                    <h5 class="section-title">
+                        <i class="fas fa-history"></i>Order History
+                    </h5>
+                    
+                    <div th:if="${#lists.isEmpty(orders)}" class="text-center py-5 text-muted">
+                        <i class="fas fa-shopping-bag fa-3x mb-3 opacity-50"></i>
+                        <p>No orders yet</p>
+                        <a th:href="@{/foods}" class="btn btn-primary">Start Shopping</a>
+                    </div>
+                    
+                    <div th:if="${!#lists.isEmpty(orders)}">
+                        <div class="order-item" th:each="order : ${orders}">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <div>
+                                    <strong>Order #<span th:text="${order.id}">123</span></strong>
+                                    <br>
+                                    <small class="text-muted" th:text="${#temporals.format(order.createdAt, 'MMM dd, yyyy HH:mm')}">Date</small>
+                                </div>
+                                <span class="status-badge" 
+                                      th:classappend="${order.status == 'PENDING'} ? 'status-pending' : 
+                                                       ${order.status == 'COMPLETED'} ? 'status-completed' : 
+                                                       'status-cancelled'"
+                                      th:text="${order.status}">Status</span>
+                            </div>
+                            
+                            <div class="mb-2">
+                                <small class="text-muted">Items:</small>
+                                <ul class="mb-0">
+                                    <li th:each="item : ${order.items}" class="small">
+                                        <span th:text="${item.foodName}">Food</span> 
+                                        x<span th:text="${item.quantity}">1</span> 
+                                        - $<span th:text="${item.price}">0.00</span>
+                                    </li>
+                                </ul>
+                            </div>
+                            
+                            <div class="d-flex justify-content-between align-items-center">
+                                <strong class="text-success">
+                                    Total: $<span th:text="${order.totalAmount}">0.00</span>
+                                </strong>
+                                <button class="btn btn-sm btn-outline-danger" 
+                                        th:if="${order.status == 'PENDING'}"
+                                        th:onclick="'cancelOrder(' + ${order.id} + ')'">
+                                    Cancel Order
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="profile-card" th:if="${!#lists.isEmpty(cartItems)}">
+                    <h5 class="section-title">
+                        <i class="fas fa-shopping-cart"></i>Current Cart
+                    </h5>
+                    
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Item</th>
+                                    <th>Price</th>
+                                    <th>Quantity</th>
+                                    <th>Subtotal</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="item : ${cartItems}">
+                                    <td th:text="${item.foodName}">Food Name</td>
+                                    <td>$<span th:text="${item.foodPrice}">0.00</span></td>
+                                    <td th:text="${item.quantity}">1</td>
+                                    <td><strong>$<span th:text="${item.subtotal}">0.00</span></strong></td>
+                                </tr>
+                            </tbody>
+                            <tfoot>
+                                <tr>
+                                    <td colspan="3" class="text-end"><strong>Total:</strong></td>
+                                    <td><strong class="text-success">$<span th:text="${cartTotal}">0.00</span></strong></td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                    
+                    <div class="text-end">
+                        <a th:href="@{/foods}" class="btn btn-outline-primary me-2">Continue Shopping</a>
+                        <button class="btn btn-success" onclick="proceedToCheckout()">
+                            <i class="fas fa-credit-card me-1"></i>Checkout
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="editProfileModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-user-edit me-2"></i>Edit Profile
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="profileForm">
+                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                        
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert" 
+                             style="display: none" id="profileFormError">
+                            <i class="fas fa-exclamation-circle me-2"></i>
+                            <span></span>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="username" class="form-label">Username</label>
+                            <input type="text" class="form-control" id="username" name="username" 
+                                   th:value="${username}">
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="email" class="form-label">Email</label>
+                            <input type="email" class="form-control" id="email" name="email" 
+                                   th:value="${userEmail}">
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="password" class="form-label">New Password</label>
+                            <input type="password" class="form-control" id="password" name="password" 
+                                   placeholder="Leave blank to keep current password">
+                            <small class="form-text text-muted">Minimum 6 characters</small>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="updateProfile()">
+                        <i class="fas fa-save me-1"></i>Save Changes
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function updateProfile() {
+            const form = document.getElementById('profileForm');
+            const formData = new FormData(form);
+            const data = Object.fromEntries(formData);
+            
+            const errorDiv = document.getElementById('profileFormError');
+            errorDiv.style.display = 'none';
+
+            fetch('/api/users/profile', {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': data['_csrf']
+                },
+                body: JSON.stringify({
+                    username: data.username,
+                    email: data.email,
+                    password: data.password || null
+                })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(err => Promise.reject(err));
+                }
+                return response.json();
+            })
+            .then(data => {
+                const modal = bootstrap.Modal.getInstance(document.getElementById('editProfileModal'));
+                modal.hide();
+                showToast('Profile updated successfully!', 'success');
+                setTimeout(() => window.location.reload(), 1500);
+            })
+            .catch(error => {
+                errorDiv.querySelector('span').textContent = error.message || 'Failed to update profile';
+                errorDiv.style.display = 'block';
+            });
+        }
+
+        function cancelOrder(orderId) {
+            if (!confirm('Are you sure you want to cancel this order?')) {
+                return;
+            }
+
+            const csrfToken = document.querySelector('meta[name="_csrf"]')?.content || 
+                            document.querySelector('input[name="_csrf"]')?.value;
+
+            fetch(`/api/orders/${orderId}`, {
+                method: 'DELETE',
+                headers: {
+                    'X-CSRF-TOKEN': csrfToken
+                }
+            })
+            .then(response => {
+                if (response.ok) {
+                    showToast('Order cancelled successfully', 'success');
+                    setTimeout(() => window.location.reload(), 1500);
+                } else {
+                    return response.json().then(err => {
+                        showToast(err.message || 'Failed to cancel order', 'error');
+                    });
+                }
+            })
+            .catch(error => {
+                showToast('Failed to cancel order', 'error');
+            });
+        }
+
+        function proceedToCheckout() {
+            const csrfToken = document.querySelector('meta[name="_csrf"]')?.content || 
+                            document.querySelector('input[name="_csrf"]')?.value;
+            
+            showToast('Checkout feature coming soon!', 'info');
+        }
+
+        function showToast(message, type) {
+            const toastHtml = `
+                <div class="toast align-items-center text-white bg-${type === 'success' ? 'success' : type === 'error' ? 'danger' : 'info'} border-0" role="alert">
+                    <div class="d-flex">
+                        <div class="toast-body">${message}</div>
+                        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+                    </div>
+                </div>
+            `;
+            
+            let container = document.querySelector('.toast-container');
+            if (!container) {
+                container = document.createElement('div');
+                container.className = 'toast-container position-fixed top-0 end-0 p-3';
+                document.body.appendChild(container);
+            }
+            
+            container.insertAdjacentHTML('beforeend', toastHtml);
+            const toastEl = container.lastElementChild;
+            const toast = new bootstrap.Toast(toastEl);
+            toast.show();
+            
+            toastEl.addEventListener('hidden.bs.toast', () => toastEl.remove());
+        }
+    </script>
+
+    <div th:replace="~{fragments/common/common-libs-script :: common-libs-script}"></div>
+    <div th:replace="~{fragments/common/common-script :: common-script}"></div>
+</body>
+</html>
