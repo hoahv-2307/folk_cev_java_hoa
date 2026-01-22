@@ -101,7 +101,7 @@
             <div class="col-lg-4">
                 <div class="profile-card">
                     <div class="profile-header">
-                        <div class="profile-avatar" th:text="${username.substring(0,1).toUpperCase()}">U</div>
+                        <div class="profile-avatar" th:text="${#strings.isEmpty(username) ? 'U' : #strings.substring(username, 0, 1).toUpperCase()}">U</div>
                         <h4 th:text="${username}">Username</h4>
                         <p class="text-muted" th:text="${userEmail}">user@example.com</p>
                         <button class="btn btn-primary btn-sm mt-2" data-bs-toggle="modal" data-bs-target="#editProfileModal">
@@ -339,9 +339,6 @@
         }
 
         function proceedToCheckout() {
-            const csrfToken = document.querySelector('meta[name="_csrf"]')?.content || 
-                            document.querySelector('input[name="_csrf"]')?.value;
-            
             showToast('Checkout feature coming soon!', 'info');
         }
 

@@ -1,5 +1,6 @@
 package com.example.foods.service.impl;
 
+import com.example.foods.constant.OrderStatus;
 import com.example.foods.dto.request.CreateOrderRequestDto;
 import com.example.foods.dto.response.OrderResponseDto;
 import com.example.foods.entity.Food;
@@ -36,7 +37,11 @@ public class OrderServiceImpl implements com.example.foods.service.OrderService 
             .findById(userId)
             .orElseThrow(() -> new IllegalArgumentException("User not found with ID: " + userId));
 
-    Order order = Order.builder().user(user).totalAmount(0.0).status("PENDING").build();
+    if (orderDto.getItems() == null || orderDto.getItems().isEmpty()) {
+      throw new IllegalArgumentException("Order must contain at least one item");
+    }
+
+    Order order = Order.builder().user(user).totalAmount(0.0).status(OrderStatus.PENDING).build();
 
     double totalAmount = 0.0;
 
@@ -48,17 +53,22 @@ public class OrderServiceImpl implements com.example.foods.service.OrderService 
                   () ->
                       new IllegalArgumentException(
                           "Food not found with ID: " + itemDto.getFoodId()));
+      Integer quantity = itemDto.getQuantity();
+      if (quantity == null || quantity < 1) {
+        throw new IllegalArgumentException(
+            "Quantity must be at least 1 for food ID: " + itemDto.getFoodId());
+      }
 
       OrderItem orderItem =
           OrderItem.builder()
               .order(order)
               .food(food)
-              .quantity(itemDto.getQuantity())
+              .quantity(quantity)
               .price(food.getPrice())
               .build();
 
       order.getItems().add(orderItem);
-      totalAmount += food.getPrice() * itemDto.getQuantity();
+      totalAmount += food.getPrice() * quantity;
     }
 
     order.setTotalAmount(totalAmount);
@@ -88,7 +98,7 @@ public class OrderServiceImpl implements com.example.foods.service.OrderService 
   }
 
   @Override
-  public OrderResponseDto updateOrderStatus(Long orderId, String status) {
+  public OrderResponseDto updateOrderStatus(Long orderId, OrderStatus status) {
     log.info("Updating order {} status to: {}", orderId, status);
     Order order =
         orderRepository
@@ -108,11 +118,12 @@ public class OrderServiceImpl implements com.example.foods.service.OrderService 
             .findById(orderId)
             .orElseThrow(() -> new IllegalArgumentException("Order not found with ID: " + orderId));
 
-    if ("DELIVERED".equals(order.getStatus()) || "CANCELLED".equals(order.getStatus())) {
+    if (OrderStatus.DELIVERED.equals(order.getStatus())
+        || OrderStatus.CANCELLED.equals(order.getStatus())) {
       throw new IllegalStateException("Cannot cancel order with status: " + order.getStatus());
     }
 
-    order.setStatus("CANCELLED");
+    order.setStatus(OrderStatus.CANCELLED);
     orderRepository.save(order);
     log.info("Order cancelled successfully");
   }

@@ -15,6 +15,7 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @AllArgsConstructor
@@ -65,6 +66,19 @@ public class UserServiceImpl implements UserService, UserDetailsService {
   }
 
   @Override
+  public UserResponseDto getUserByUsername(String username) {
+    User user =
+        userRepository
+            .findByUsername(username)
+            .orElseThrow(
+                () -> {
+                  log.warn("User with username: {} not found", username);
+                  return new IllegalArgumentException("User not found with username: " + username);
+                });
+    return userMapper.toDto(user);
+  }
+
+  @Override
   public java.util.List<UserResponseDto> getAllUsers() {
     List<User> users = userRepository.findAll();
     return userMapper.toDtoList(users);
@@ -103,6 +117,7 @@ public class UserServiceImpl implements UserService, UserDetailsService {
   }
 
   @Override
+  @Transactional()
   public UserResponseDto updateProfile(Long id, UpdateProfileRequestDto profileDto) {
     User user =
         userRepository

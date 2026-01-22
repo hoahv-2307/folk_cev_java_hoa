@@ -1,9 +1,9 @@
 package com.example.foods.controller;
 
 import com.example.foods.dto.response.CartResponseDto;
-import com.example.foods.entity.User;
-import com.example.foods.repository.UserRepository;
+import com.example.foods.dto.response.UserResponseDto;
 import com.example.foods.service.CartService;
+import com.example.foods.service.UserService;
 import java.security.Principal;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -17,15 +17,12 @@ import org.springframework.web.bind.annotation.*;
 public class CartController {
 
   private final CartService cartService;
-  private final UserRepository userRepository;
+  private final UserService userService;
 
   @GetMapping
   public ResponseEntity<CartResponseDto> getCart(Principal principal) {
     log.info("REST request to get cart for user: {}", principal.getName());
-    User user =
-        userRepository
-            .findByUsername(principal.getName())
-            .orElseThrow(() -> new IllegalArgumentException("User not found"));
+    UserResponseDto user = userService.getUserByUsername(principal.getName());
     CartResponseDto cart = cartService.getOrCreateCart(user.getId());
     return ResponseEntity.ok(cart);
   }
@@ -38,10 +35,7 @@ public class CartController {
         principal.getName(),
         foodId,
         quantity);
-    User user =
-        userRepository
-            .findByUsername(principal.getName())
-            .orElseThrow(() -> new IllegalArgumentException("User not found"));
+    UserResponseDto user = userService.getUserByUsername(principal.getName());
     CartResponseDto cart = cartService.addItemToCart(user.getId(), foodId, quantity);
     return ResponseEntity.ok(cart);
   }
@@ -54,10 +48,7 @@ public class CartController {
         principal.getName(),
         foodId,
         quantity);
-    User user =
-        userRepository
-            .findByUsername(principal.getName())
-            .orElseThrow(() -> new IllegalArgumentException("User not found"));
+    UserResponseDto user = userService.getUserByUsername(principal.getName());
     CartResponseDto cart = cartService.updateCartItemQuantity(user.getId(), foodId, quantity);
     return ResponseEntity.ok(cart);
   }
@@ -67,10 +58,7 @@ public class CartController {
       @PathVariable Long foodId, Principal principal) {
     log.info(
         "REST request to remove item from cart - User: {}, Food: {}", principal.getName(), foodId);
-    User user =
-        userRepository
-            .findByUsername(principal.getName())
-            .orElseThrow(() -> new IllegalArgumentException("User not found"));
+    UserResponseDto user = userService.getUserByUsername(principal.getName());
     CartResponseDto cart = cartService.removeItemFromCart(user.getId(), foodId);
     return ResponseEntity.ok(cart);
   }
@@ -78,10 +66,7 @@ public class CartController {
   @DeleteMapping
   public ResponseEntity<Void> clearCart(Principal principal) {
     log.info("REST request to clear cart for user: {}", principal.getName());
-    User user =
-        userRepository
-            .findByUsername(principal.getName())
-            .orElseThrow(() -> new IllegalArgumentException("User not found"));
+    UserResponseDto user = userService.getUserByUsername(principal.getName());
     cartService.clearCart(user.getId());
     return ResponseEntity.noContent().build();
   }

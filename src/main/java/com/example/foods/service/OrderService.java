@@ -1,5 +1,6 @@
 package com.example.foods.service;
 
+import com.example.foods.constant.OrderStatus;
 import com.example.foods.dto.request.CreateOrderRequestDto;
 import com.example.foods.dto.response.OrderResponseDto;
 import java.util.List;
@@ -11,7 +12,7 @@ public interface OrderService {
 
   List<OrderResponseDto> getUserOrders(Long userId);
 
-  OrderResponseDto updateOrderStatus(Long orderId, String status);
+  OrderResponseDto updateOrderStatus(Long orderId, OrderStatus status);
 
   void cancelOrder(Long orderId);
 }

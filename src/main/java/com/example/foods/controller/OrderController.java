@@ -1,10 +1,11 @@
 package com.example.foods.controller;
 
+import com.example.foods.constant.OrderStatus;
 import com.example.foods.dto.request.CreateOrderRequestDto;
 import com.example.foods.dto.response.OrderResponseDto;
-import com.example.foods.entity.User;
-import com.example.foods.repository.UserRepository;
+import com.example.foods.dto.response.UserResponseDto;
 import com.example.foods.service.OrderService;
+import com.example.foods.service.UserService;
 import jakarta.validation.Valid;
 import java.security.Principal;
 import java.util.List;
@@ -21,16 +22,13 @@ import org.springframework.web.bind.annotation.*;
 public class OrderController {
 
   private final OrderService orderService;
-  private final UserRepository userRepository;
+  private final UserService userService;
 
   @PostMapping
   public ResponseEntity<OrderResponseDto> createOrder(
       @Valid @RequestBody CreateOrderRequestDto orderDto, Principal principal) {
     log.info("REST request to create order for user: {}", principal.getName());
-    User user =
-        userRepository
-            .findByUsername(principal.getName())
-            .orElseThrow(() -> new IllegalArgumentException("User not found"));
+    UserResponseDto user = userService.getUserByUsername(principal.getName());
     OrderResponseDto createdOrder = orderService.createOrder(user.getId(), orderDto);
     return new ResponseEntity<>(createdOrder, HttpStatus.CREATED);
   }
@@ -38,10 +36,7 @@ public class OrderController {
   @GetMapping
   public ResponseEntity<List<OrderResponseDto>> getUserOrders(Principal principal) {
     log.info("REST request to get orders for user: {}", principal.getName());
-    User user =
-        userRepository
-            .findByUsername(principal.getName())
-            .orElseThrow(() -> new IllegalArgumentException("User not found"));
+    UserResponseDto user = userService.getUserByUsername(principal.getName());
     List<OrderResponseDto> orders = orderService.getUserOrders(user.getId());
     return ResponseEntity.ok(orders);
   }
@@ -55,7 +50,7 @@ public class OrderController {
 
   @PatchMapping("/{id}/status")
   public ResponseEntity<OrderResponseDto> updateOrderStatus(
-      @PathVariable Long id, @RequestParam String status) {
+      @PathVariable Long id, @RequestParam OrderStatus status) {
     log.info("REST request to update order {} status to: {}", id, status);
     OrderResponseDto updatedOrder = orderService.updateOrderStatus(id, status);
     return ResponseEntity.ok(updatedOrder);

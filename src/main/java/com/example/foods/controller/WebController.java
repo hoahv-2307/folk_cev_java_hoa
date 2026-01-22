@@ -2,8 +2,6 @@ package com.example.foods.controller;
 
 import com.example.foods.dto.request.UserRequestDto;
 import com.example.foods.dto.response.UserResponseDto;
-import com.example.foods.entity.User;
-import com.example.foods.repository.UserRepository;
 import com.example.foods.service.CartService;
 import com.example.foods.service.FoodService;
 import com.example.foods.service.OrderService;
@@ -30,7 +28,6 @@ public class WebController {
   private final UserService userService;
   private final OrderService orderService;
   private final CartService cartService;
-  private final UserRepository userRepository;
 
   @GetMapping("/")
   public String home() {
@@ -115,10 +112,7 @@ public class WebController {
   public String showProfilePage(Model model, Authentication authentication) {
     log.info("Navigating to profile page for user: {}", authentication.getName());
 
-    User user =
-        userRepository
-            .findByUsername(authentication.getName())
-            .orElseThrow(() -> new IllegalArgumentException("User not found"));
+    UserResponseDto user = userService.getUserByUsername(authentication.getName());
 
     var orders = orderService.getUserOrders(user.getId());
     var cart = cartService.getOrCreateCart(user.getId());

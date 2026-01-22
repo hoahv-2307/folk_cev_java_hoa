@@ -1,5 +1,6 @@
 package com.example.foods.entity;
 
+import com.example.foods.constant.OrderStatus;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -36,8 +37,9 @@ public class Order {
   @Column(nullable = false)
   private Double totalAmount;
 
+  @Enumerated(EnumType.STRING)
   @Column(nullable = false)
-  private String status;
+  private OrderStatus status;
 
   @Column(name = "created_at")
   private LocalDateTime createdAt;
@@ -50,7 +52,7 @@ public class Order {
     createdAt = LocalDateTime.now();
     updatedAt = LocalDateTime.now();
     if (status == null) {
-      status = "PENDING";
+      status = OrderStatus.PENDING;
     }
   }
 
