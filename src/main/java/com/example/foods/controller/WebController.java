@@ -2,7 +2,9 @@ package com.example.foods.controller;
 
 import com.example.foods.dto.request.UserRequestDto;
 import com.example.foods.dto.response.UserResponseDto;
+import com.example.foods.service.CartService;
 import com.example.foods.service.FoodService;
+import com.example.foods.service.OrderService;
 import com.example.foods.service.UserService;
 import jakarta.validation.Valid;
 import java.net.URLDecoder;
@@ -24,6 +26,8 @@ public class WebController {
 
   private final FoodService foodService;
   private final UserService userService;
+  private final OrderService orderService;
+  private final CartService cartService;
 
   @GetMapping("/")
   public String home() {
@@ -102,5 +106,26 @@ public class WebController {
     model.addAttribute("food", null);
     log.info("Navigating to create food page");
     return "fragments/admin/admin-add-food :: add-food-modal";
+  }
+
+  @GetMapping("/profile")
+  public String showProfilePage(Model model, Authentication authentication) {
+    log.info("Navigating to profile page for user: {}", authentication.getName());
+
+    UserResponseDto user = userService.getUserByUsername(authentication.getName());
+
+    var orders = orderService.getUserOrders(user.getId());
+    var cart = cartService.getOrCreateCart(user.getId());
+
+    model.addAttribute("username", user.getUsername());
+    model.addAttribute("userEmail", user.getEmail());
+    model.addAttribute("userId", user.getId());
+    model.addAttribute("totalOrders", orders.size());
+    model.addAttribute("orders", orders);
+    model.addAttribute("cartItems", cart.getItems());
+    model.addAttribute("cartItemCount", cart.getItems().size());
+    model.addAttribute("cartTotal", cart.getTotalAmount());
+
+    return "user/profile";
   }
 }

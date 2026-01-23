@@ -1,5 +1,6 @@
 package com.example.foods.service.impl;
 
+import com.example.foods.dto.request.UpdateProfileRequestDto;
 import com.example.foods.dto.request.UserRequestDto;
 import com.example.foods.dto.response.UserResponseDto;
 import com.example.foods.entity.User;
@@ -14,6 +15,7 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @AllArgsConstructor
@@ -64,6 +66,19 @@ public class UserServiceImpl implements UserService, UserDetailsService {
   }
 
   @Override
+  public UserResponseDto getUserByUsername(String username) {
+    User user =
+        userRepository
+            .findByUsername(username)
+            .orElseThrow(
+                () -> {
+                  log.warn("User with username: {} not found", username);
+                  return new IllegalArgumentException("User not found with username: " + username);
+                });
+    return userMapper.toDto(user);
+  }
+
+  @Override
   public java.util.List<UserResponseDto> getAllUsers() {
     List<User> users = userRepository.findAll();
     return userMapper.toDtoList(users);
@@ -99,5 +114,42 @@ public class UserServiceImpl implements UserService, UserDetailsService {
             });
     userRepository.deleteById(id);
     log.info("Deleted user with ID: {}", id);
+  }
+
+  @Override
+  @Transactional()
+  public UserResponseDto updateProfile(Long id, UpdateProfileRequestDto profileDto) {
+    User user =
+        userRepository
+            .findById(id)
+            .orElseThrow(
+                () -> {
+                  log.warn("User with ID: {} not found for profile update", id);
+                  throw new IllegalArgumentException("User not found with ID: " + id);
+                });
+
+    if (profileDto.getUsername() != null && !profileDto.getUsername().isBlank()) {
+      if (!user.getUsername().equals(profileDto.getUsername())
+          && userRepository.existsByUsername(profileDto.getUsername())) {
+        throw new IllegalArgumentException("Username already exists: " + profileDto.getUsername());
+      }
+      user.setUsername(profileDto.getUsername());
+    }
+
+    if (profileDto.getEmail() != null && !profileDto.getEmail().isBlank()) {
+      if (!user.getEmail().equals(profileDto.getEmail())
+          && userRepository.existsByEmail(profileDto.getEmail())) {
+        throw new IllegalArgumentException("Email already exists: " + profileDto.getEmail());
+      }
+      user.setEmail(profileDto.getEmail());
+    }
+
+    if (profileDto.getPassword() != null && !profileDto.getPassword().isBlank()) {
+      user.setPassword(passwordEncoder.encode(profileDto.getPassword()));
+    }
+
+    user = userRepository.save(user);
+    log.info("Updated profile for user with ID: {}", user.getId());
+    return userMapper.toDto(user);
   }
 }
