@@ -19,6 +19,20 @@
                  th:data-category="${food.category}" th:data-price="${food.price}" 
                  th:data-name="${food.name}" th:data-id="${food.id}">
                 <div class="card meal-card position-relative h-100">
+                    <!-- Food Image -->
+                    <div th:if="${!#lists.isEmpty(food.foodImages)}" class="card-img-wrapper">
+                        <img th:src="@{/api/foods/images/{filename}(filename=${food.foodImages[0].imageUrl})}" 
+                             class="card-img-top food-image" 
+                             th:alt="${food.name}"
+                             style="height: 200px; object-fit: cover; cursor: pointer;"
+                             th:onclick="'window.location.href=\\'/foods/' + ${food.id} + '\\''">
+                    </div>
+                    <div th:if="${#lists.isEmpty(food.foodImages)}" 
+                         class="card-img-top d-flex align-items-center justify-content-center bg-light" 
+                         style="height: 200px; cursor: pointer;"
+                         th:onclick="'window.location.href=\\'/foods/' + ${food.id} + '\\''">\n                        <i class="fas fa-utensils fa-3x text-muted"></i>
+                    </div>
+                    
                     <div class="card-body p-4">
                         <!-- Price Badge -->
                         <div class="price-badge">$<span th:text="${food.price}">0.00</span></div>
@@ -27,7 +41,9 @@
                         <span class="category-tag" th:text="${food.category}">Category</span>
                         
                         <!-- Food Info -->
-                        <h5 class="card-title mt-3 mb-2" th:text="${food.name}">Food Name</h5>
+                        <a th:href="@{/foods/{id}(id=${food.id})}" class="text-decoration-none">
+                            <h5 class="card-title mt-3 mb-2" th:text="${food.name}">Food Name</h5>
+                        </a>
                         <p class="card-text text-muted mb-4" th:text="${food.description}">Description</p>
                         
                         <!-- Action Buttons -->

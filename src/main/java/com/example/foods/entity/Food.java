@@ -2,6 +2,8 @@ package com.example.foods.entity;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -22,6 +24,7 @@ public class Food {
   @Column(nullable = false)
   private String name;
 
+  @Column(length = 1000)
   private String description;
 
   @Column(nullable = false)
@@ -30,11 +33,20 @@ public class Food {
   @Column(nullable = false)
   private Double price;
 
+  @OneToMany(mappedBy = "food", cascade = CascadeType.ALL, orphanRemoval = true)
+  @Builder.Default
+  private List<FoodImage> foodImages = new ArrayList<>();
+
   @Column(name = "created_at")
   private LocalDateTime createdAt;
 
   @Column(name = "updated_at")
   private LocalDateTime updatedAt;
+
+  public void addFoodImage(FoodImage foodImage) {
+    this.foodImages.add(foodImage);
+    foodImage.setFood(this);
+  }
 
   @PrePersist
   protected void onCreate() {

@@ -1,7 +1,9 @@
 package com.example.foods.mapper;
 
-import com.example.foods.dto.FoodDto;
+import com.example.foods.dto.request.FoodRequestDto;
+import com.example.foods.dto.response.FoodResponseDto;
 import com.example.foods.entity.Food;
+import com.example.foods.entity.FoodImage;
 import java.util.List;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -13,17 +15,26 @@ import org.mapstruct.NullValuePropertyMappingStrategy;
     nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
 public interface FoodMapper {
 
-  FoodDto toDto(Food food);
+  FoodResponseDto toDto(Food food);
 
   @Mapping(target = "id", ignore = true)
   @Mapping(target = "createdAt", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
-  Food toEntity(FoodDto foodDto);
+  @Mapping(target = "foodImages", ignore = true)
+  Food toEntity(FoodRequestDto foodDto);
 
-  List<FoodDto> toDtoList(List<Food> foods);
+  List<FoodResponseDto> toDtoList(List<Food> foods);
 
   @Mapping(target = "id", ignore = true)
   @Mapping(target = "createdAt", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
-  void updateEntityFromDto(FoodDto foodDto, @MappingTarget Food food);
+  @Mapping(target = "foodImages", ignore = true)
+  void updateEntityFromDto(FoodRequestDto foodDto, @MappingTarget Food food);
+
+  default FoodImage toFoodImageEntity(String imageUrl) {
+    if (imageUrl == null) {
+      return null;
+    }
+    return FoodImage.builder().imageUrl(imageUrl).build();
+  }
 }

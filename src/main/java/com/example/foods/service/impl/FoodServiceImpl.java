@@ -1,9 +1,11 @@
 package com.example.foods.service.impl;
 
-import com.example.foods.dto.FoodDto;
+import com.example.foods.dto.request.FoodRequestDto;
+import com.example.foods.dto.response.FoodResponseDto;
 import com.example.foods.entity.Food;
 import com.example.foods.mapper.FoodMapper;
 import com.example.foods.repository.FoodRepository;
+import com.example.foods.service.FileStorageService;
 import com.example.foods.service.FoodService;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -19,18 +21,29 @@ public class FoodServiceImpl implements FoodService {
 
   private final FoodRepository foodRepository;
   private final FoodMapper foodMapper;
+  private final FileStorageService fileStorageService;
 
   @Override
-  public FoodDto createFood(FoodDto foodDto) {
+  public FoodResponseDto createFood(FoodRequestDto foodDto) {
     log.info("Creating new food: {}", foodDto.getName());
-
-    // Check if food with same name already exists
     if (foodRepository.existsByNameIgnoreCase(foodDto.getName())) {
       throw new IllegalArgumentException(
           "Food with name '" + foodDto.getName() + "' already exists");
     }
-
     Food food = foodMapper.toEntity(foodDto);
+    log.info("Mapping food DTO to entity with images: {}", foodDto.getFoodImages());
+
+    if (foodDto.getFoodImages() != null) {
+      foodDto
+          .getFoodImages()
+          .forEach(
+              image -> {
+                String fileURL = fileStorageService.uploadFile(image);
+                food.addFoodImage(foodMapper.toFoodImageEntity(fileURL));
+                log.info("Uploaded and added image to food: {}", food.getFoodImages().size());
+              });
+    }
+    log.info("Saving food entity to the database: {}", food.getName());
     Food savedFood = foodRepository.save(food);
 
     log.info("Successfully created food with ID: {}", savedFood.getId());
@@ -39,7 +52,7 @@ public class FoodServiceImpl implements FoodService {
 
   @Override
   @Transactional(readOnly = true)
-  public List<FoodDto> getAllFoods() {
+  public List<FoodResponseDto> getAllFoods() {
     log.info("Retrieving all foods");
     List<Food> foods = foodRepository.findAll();
     return foodMapper.toDtoList(foods);
@@ -47,7 +60,7 @@ public class FoodServiceImpl implements FoodService {
 
   @Override
   @Transactional(readOnly = true)
-  public FoodDto getFoodById(Long id) {
+  public FoodResponseDto getFoodById(Long id) {
     log.info("Retrieving food with ID: {}", id);
     Food food =
         foodRepository
@@ -57,7 +70,7 @@ public class FoodServiceImpl implements FoodService {
   }
 
   @Override
-  public FoodDto updateFood(Long id, FoodDto foodDto) {
+  public FoodResponseDto updateFood(Long id, FoodRequestDto foodDto) {
     log.info("Updating food with ID: {}", id);
 
     Food existingFood =
@@ -72,6 +85,21 @@ public class FoodServiceImpl implements FoodService {
     }
 
     foodMapper.updateEntityFromDto(foodDto, existingFood);
+    
+    if (foodDto.getFoodImages() != null && !foodDto.getFoodImages().isEmpty()) {
+      log.info("Updating food images for food ID: {}", id);
+      
+      existingFood.getFoodImages().clear();
+      
+      foodDto.getFoodImages().forEach(image -> {
+        String fileURL = fileStorageService.uploadFile(image);
+        existingFood.addFoodImage(foodMapper.toFoodImageEntity(fileURL));
+        log.info("Added new image to food: {}", fileURL);
+      });
+      
+      log.info("Updated food images. New image count: {}", existingFood.getFoodImages().size());
+    }
+    
     Food updatedFood = foodRepository.save(existingFood);
 
     log.info("Successfully updated food with ID: {}", id);
@@ -92,7 +120,7 @@ public class FoodServiceImpl implements FoodService {
 
   @Override
   @Transactional(readOnly = true)
-  public List<FoodDto> getFoodsByCategory(String category) {
+  public List<FoodResponseDto> getFoodsByCategory(String category) {
     log.info("Retrieving foods by category: {}", category);
     List<Food> foods = foodRepository.findByCategory(category);
     return foodMapper.toDtoList(foods);
@@ -100,7 +128,7 @@ public class FoodServiceImpl implements FoodService {
 
   @Override
   @Transactional(readOnly = true)
-  public List<FoodDto> searchFoodsByName(String name) {
+  public List<FoodResponseDto> searchFoodsByName(String name) {
     log.info("Searching foods by name: {}", name);
     List<Food> foods = foodRepository.findByNameContainingIgnoreCase(name);
     return foodMapper.toDtoList(foods);
@@ -108,7 +136,7 @@ public class FoodServiceImpl implements FoodService {
 
   @Override
   @Transactional(readOnly = true)
-  public List<FoodDto> getFoodsByPriceRange(Double minPrice, Double maxPrice) {
+  public List<FoodResponseDto> getFoodsByPriceRange(Double minPrice, Double maxPrice) {
     log.info("Retrieving foods by price range: {} - {}", minPrice, maxPrice);
 
     if (minPrice < 0 || maxPrice < 0 || minPrice > maxPrice) {

@@ -47,14 +47,13 @@
                 
                 const scripts = modalContainer.querySelectorAll("script");
                 scripts.forEach((script) => {
-                  const newScript = document.createElement("script");
                   if (script.src) {
+                    const newScript = document.createElement("script");
                     newScript.src = script.src;
+                    document.head.appendChild(newScript);
                   } else {
-                    newScript.textContent = script.textContent;
+                    eval(script.textContent);
                   }
-                  document.head.appendChild(newScript);
-                  setTimeout(() => document.head.removeChild(newScript), 100);
                 });
                 
                 const addFoodModal = new bootstrap.Modal(
@@ -76,14 +75,13 @@
                   
                   const scripts = modalContainer.querySelectorAll("script");
                   scripts.forEach((script) => {
-                    const newScript = document.createElement("script");
                     if (script.src) {
+                      const newScript = document.createElement("script");
                       newScript.src = script.src;
+                      document.head.appendChild(newScript);
                     } else {
-                      newScript.textContent = script.textContent;
+                      eval(script.textContent);
                     }
-                    document.head.appendChild(newScript);
-                    setTimeout(() => document.head.removeChild(newScript), 100);
                   });
                   
                   const addFoodModal = new bootstrap.Modal(

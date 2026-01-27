@@ -6,7 +6,8 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
-import com.example.foods.dto.FoodDto;
+import com.example.foods.dto.request.FoodRequestDto;
+import com.example.foods.dto.response.FoodResponseDto;
 import com.example.foods.entity.Food;
 import com.example.foods.mapper.FoodMapper;
 import com.example.foods.repository.FoodRepository;
@@ -28,16 +29,26 @@ class FoodServiceImplTest {
 
   @Mock private FoodMapper foodMapper;
 
+  @Mock private FileStorageService fileStorageService;
+
   @InjectMocks private FoodServiceImpl foodService;
 
-  private FoodDto foodDto;
+  private FoodResponseDto foodResponseDto;
+  private FoodRequestDto foodRequestDto;
   private Food food;
 
   @BeforeEach
   void setUp() {
-    foodDto =
-        FoodDto.builder()
+    foodResponseDto =
+        FoodResponseDto.builder()
             .id(1L)
+            .name("Test Pizza")
+            .description("Test description")
+            .category("Italian")
+            .price(12.99)
+            .build();
+    foodRequestDto =
+        FoodRequestDto.builder()
             .name("Test Pizza")
             .description("Test description")
             .category("Italian")
@@ -58,12 +69,12 @@ class FoodServiceImplTest {
   void createFood_ShouldReturnCreatedFood_WhenValidInput() {
     // Given
     when(foodRepository.existsByNameIgnoreCase(anyString())).thenReturn(false);
-    when(foodMapper.toEntity(any(FoodDto.class))).thenReturn(food);
+    when(foodMapper.toEntity(any(FoodRequestDto.class))).thenReturn(food);
     when(foodRepository.save(any(Food.class))).thenReturn(food);
-    when(foodMapper.toDto(any(Food.class))).thenReturn(foodDto);
+    when(foodMapper.toDto(any(Food.class))).thenReturn(foodResponseDto);
 
     // When
-    FoodDto result = foodService.createFood(foodDto);
+    FoodResponseDto result = foodService.createFood(foodRequestDto);
 
     // Then
     assertThat(result).isNotNull();
@@ -78,7 +89,7 @@ class FoodServiceImplTest {
     when(foodRepository.existsByNameIgnoreCase(anyString())).thenReturn(true);
 
     // When & Then
-    assertThatThrownBy(() -> foodService.createFood(foodDto))
+    assertThatThrownBy(() -> foodService.createFood(foodRequestDto))
         .isInstanceOf(IllegalArgumentException.class)
         .hasMessageContaining("already exists");
 
@@ -89,10 +100,10 @@ class FoodServiceImplTest {
   void getFoodById_ShouldReturnFood_WhenFoodExists() {
     // Given
     when(foodRepository.findById(1L)).thenReturn(Optional.of(food));
-    when(foodMapper.toDto(any(Food.class))).thenReturn(foodDto);
+    when(foodMapper.toDto(any(Food.class))).thenReturn(foodResponseDto);
 
     // When
-    FoodDto result = foodService.getFoodById(1L);
+    FoodResponseDto result = foodService.getFoodById(1L);
 
     // Then
     assertThat(result).isNotNull();
@@ -117,13 +128,13 @@ class FoodServiceImplTest {
   void getAllFoods_ShouldReturnAllFoods() {
     // Given
     List<Food> foods = Arrays.asList(food);
-    List<FoodDto> foodDtos = Arrays.asList(foodDto);
+    List<FoodResponseDto> foodDtos = Arrays.asList(foodResponseDto);
 
     when(foodRepository.findAll()).thenReturn(foods);
     when(foodMapper.toDtoList(foods)).thenReturn(foodDtos);
 
     // When
-    List<FoodDto> result = foodService.getAllFoods();
+    List<FoodResponseDto> result = foodService.getAllFoods();
 
     // Then
     assertThat(result).hasSize(1);
