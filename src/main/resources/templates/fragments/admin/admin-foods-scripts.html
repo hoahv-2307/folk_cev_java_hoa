@@ -92,6 +92,43 @@
                 .catch((error) => console.error("Error loading edit modal:", error));
             });
           });
+          document.querySelectorAll(".btn-outline-danger").forEach((btn) => {
+            btn.addEventListener("click", function () {
+              const foodId = this.getAttribute("data-food-id");
+              if (confirm("Are you sure you want to delete this food item?")) {
+                const csrfToken = document.querySelector('meta[name="_csrf"]')?.getAttribute('content') || 
+                                 document.querySelector('input[name="_csrf"]')?.value;
+                const csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.getAttribute('content') || 
+                                  'X-CSRF-TOKEN';
+                const headers = {
+                  "X-Requested-With": "XMLHttpRequest",
+                };
+                
+                if (csrfToken) {
+                  headers[csrfHeader] = csrfToken;
+                }
+                
+                fetch(`/api/foods/${foodId}`, {
+                  method: "DELETE",
+                  headers: headers,
+                })
+                  .then((response) => {
+                    if (response.ok) {
+                      showToast("Food item deleted successfully!", "success");
+                      setTimeout(() => {
+                        location.reload();
+                      }, 1500);
+                    } else {
+                      showToast("Failed to delete food item.", "error");
+                    }
+                  })
+                  .catch((error) => {
+                    console.error("Error deleting food item:", error);
+                    showToast("Error deleting food item.", "error");
+                  });
+              }
+            });
+          });
         })();
     </script>
 </body>

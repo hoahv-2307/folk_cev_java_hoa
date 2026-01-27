@@ -1,6 +1,7 @@
 package com.example.foods.mapper;
 
 import com.example.foods.dto.request.FoodRequestDto;
+import com.example.foods.dto.response.FoodImageResponseDto;
 import com.example.foods.dto.response.FoodResponseDto;
 import com.example.foods.entity.Food;
 import com.example.foods.entity.FoodImage;
@@ -30,6 +31,10 @@ public interface FoodMapper {
   @Mapping(target = "updatedAt", ignore = true)
   @Mapping(target = "foodImages", ignore = true)
   void updateEntityFromDto(FoodRequestDto foodDto, @MappingTarget Food food);
+
+  FoodImageResponseDto toFoodImageDto(FoodImage foodImage);
+
+  List<FoodImageResponseDto> toFoodImageDtoList(List<FoodImage> foodImages);
 
   default FoodImage toFoodImageEntity(String imageUrl) {
     if (imageUrl == null) {

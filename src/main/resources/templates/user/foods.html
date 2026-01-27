@@ -30,7 +30,8 @@
                     <div th:if="${#lists.isEmpty(food.foodImages)}" 
                          class="card-img-top d-flex align-items-center justify-content-center bg-light" 
                          style="height: 200px; cursor: pointer;"
-                         th:onclick="'window.location.href=\\'/foods/' + ${food.id} + '\\''">\n                        <i class="fas fa-utensils fa-3x text-muted"></i>
+                         th:onclick="'window.location.href=\\'/foods/' + ${food.id} + '\\''">
+                         <i class="fas fa-utensils fa-3x text-muted"></i>
                     </div>
                     
                     <div class="card-body p-4">

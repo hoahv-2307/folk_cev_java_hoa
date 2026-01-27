@@ -3,7 +3,6 @@ package com.example.foods.service.impl;
 import com.example.foods.service.FileStorageService;
 import java.io.IOException;
 import java.util.UUID;
-import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -12,16 +11,23 @@ import software.amazon.awssdk.services.s3.S3Client;
 
 @Service
 @Slf4j
-@AllArgsConstructor
 public class FileStorageServiceImpl implements FileStorageService {
 
   private final S3Client s3Client;
-
-  @Value("${aws.s3.bucket-name}")
   private final String bucketName;
 
+  public FileStorageServiceImpl(
+      S3Client s3Client, @Value("${aws.s3.bucket-name}") String bucketName) {
+    this.s3Client = s3Client;
+    this.bucketName = bucketName;
+  }
+
+  @Override
   public String uploadFile(MultipartFile file) {
-    String uniqueFileName = UUID.randomUUID() + "_" + file.getOriginalFilename();
+    String uniqueFileName =
+        UUID.randomUUID()
+            + "_"
+            + (file.getOriginalFilename() != null ? file.getOriginalFilename() : "unknown");
     try {
       s3Client.putObject(
           builder -> builder.bucket(bucketName).key(uniqueFileName).build(),
@@ -34,6 +40,7 @@ public class FileStorageServiceImpl implements FileStorageService {
     }
   }
 
+  @Override
   public byte[] downloadFile(String filename) {
     try {
       byte[] fileBytes =
@@ -48,6 +55,7 @@ public class FileStorageServiceImpl implements FileStorageService {
     }
   }
 
+  @Override
   public void deleteFile(String filename) {
     try {
       s3Client.deleteObject(builder -> builder.bucket(bucketName).key(filename).build());
@@ -58,6 +66,7 @@ public class FileStorageServiceImpl implements FileStorageService {
     }
   }
 
+  @Override
   public boolean fileExists(String filename) {
     try {
       s3Client.headObject(builder -> builder.bucket(bucketName).key(filename).build());

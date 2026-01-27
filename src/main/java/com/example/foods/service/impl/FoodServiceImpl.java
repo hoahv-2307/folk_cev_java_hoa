@@ -7,6 +7,7 @@ import com.example.foods.mapper.FoodMapper;
 import com.example.foods.repository.FoodRepository;
 import com.example.foods.service.FileStorageService;
 import com.example.foods.service.FoodService;
+import java.util.ArrayList;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -33,21 +34,29 @@ public class FoodServiceImpl implements FoodService {
     Food food = foodMapper.toEntity(foodDto);
     log.info("Mapping food DTO to entity with images: {}", foodDto.getFoodImages());
 
-    if (foodDto.getFoodImages() != null) {
-      foodDto
-          .getFoodImages()
-          .forEach(
-              image -> {
-                String fileURL = fileStorageService.uploadFile(image);
-                food.addFoodImage(foodMapper.toFoodImageEntity(fileURL));
-                log.info("Uploaded and added image to food: {}", food.getFoodImages().size());
-              });
-    }
-    log.info("Saving food entity to the database: {}", food.getName());
-    Food savedFood = foodRepository.save(food);
+    List<String> uploadedFileKeys = new ArrayList<>();
+    try {
+      if (foodDto.getFoodImages() != null) {
+        foodDto
+            .getFoodImages()
+            .forEach(
+                image -> {
+                  String fileURL = fileStorageService.uploadFile(image);
+                  uploadedFileKeys.add(fileURL);
+                  food.addFoodImage(foodMapper.toFoodImageEntity(fileURL));
+                  log.info("Uploaded and added image to food: {}", food.getFoodImages().size());
+                });
+      }
+      log.info("Saving food entity to the database: {}", food.getName());
+      Food savedFood = foodRepository.save(food);
 
-    log.info("Successfully created food with ID: {}", savedFood.getId());
-    return foodMapper.toDto(savedFood);
+      log.info("Successfully created food with ID: {}", savedFood.getId());
+      return foodMapper.toDto(savedFood);
+    } catch (Exception e) {
+      log.error("Failed to create food, cleaning up uploaded files: {}", uploadedFileKeys);
+      cleanupUploadedFiles(uploadedFileKeys);
+      throw e;
+    }
   }
 
   @Override
@@ -85,25 +94,36 @@ public class FoodServiceImpl implements FoodService {
     }
 
     foodMapper.updateEntityFromDto(foodDto, existingFood);
-    
-    if (foodDto.getFoodImages() != null && !foodDto.getFoodImages().isEmpty()) {
-      log.info("Updating food images for food ID: {}", id);
-      
-      existingFood.getFoodImages().clear();
-      
-      foodDto.getFoodImages().forEach(image -> {
-        String fileURL = fileStorageService.uploadFile(image);
-        existingFood.addFoodImage(foodMapper.toFoodImageEntity(fileURL));
-        log.info("Added new image to food: {}", fileURL);
-      });
-      
-      log.info("Updated food images. New image count: {}", existingFood.getFoodImages().size());
-    }
-    
-    Food updatedFood = foodRepository.save(existingFood);
 
-    log.info("Successfully updated food with ID: {}", id);
-    return foodMapper.toDto(updatedFood);
+    List<String> uploadedFileKeys = new ArrayList<>();
+    try {
+      if (foodDto.getFoodImages() != null && !foodDto.getFoodImages().isEmpty()) {
+        log.info("Updating food images for food ID: {}", id);
+
+        existingFood.getFoodImages().clear();
+
+        foodDto
+            .getFoodImages()
+            .forEach(
+                image -> {
+                  String fileURL = fileStorageService.uploadFile(image);
+                  uploadedFileKeys.add(fileURL);
+                  existingFood.addFoodImage(foodMapper.toFoodImageEntity(fileURL));
+                  log.info("Added new image to food: {}", fileURL);
+                });
+
+        log.info("Updated food images. New image count: {}", existingFood.getFoodImages().size());
+      }
+
+      Food updatedFood = foodRepository.save(existingFood);
+
+      log.info("Successfully updated food with ID: {}", id);
+      return foodMapper.toDto(updatedFood);
+    } catch (Exception e) {
+      log.error("Failed to update food, cleaning up uploaded files: {}", uploadedFileKeys);
+      cleanupUploadedFiles(uploadedFileKeys);
+      throw e;
+    }
   }
 
   @Override
@@ -145,5 +165,19 @@ public class FoodServiceImpl implements FoodService {
 
     List<Food> foods = foodRepository.findByPriceBetween(minPrice, maxPrice);
     return foodMapper.toDtoList(foods);
+  }
+
+  private void cleanupUploadedFiles(List<String> fileKeys) {
+    if (fileKeys != null && !fileKeys.isEmpty()) {
+      fileKeys.forEach(
+          fileKey -> {
+            try {
+              fileStorageService.deleteFile(fileKey);
+              log.info("Cleaned up orphaned file: {}", fileKey);
+            } catch (Exception e) {
+              log.warn("Failed to cleanup orphaned file: {}", fileKey, e);
+            }
+          });
+    }
   }
 }

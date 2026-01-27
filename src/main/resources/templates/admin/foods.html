@@ -141,7 +141,7 @@
                                     <tr th:each="food : ${foods}" class="food-row">
                                         <td th:text="${food.id}">1</td>
                                         <td>
-                                            <a th:href="@{/foods/{id}(id=${food.id})}" class="text-decoration-none">
+                                            <a href="#" class="text-decoration-none">
                                                 <strong th:text="${food.name}">Food Name</strong>
                                             </a>
                                         </td>

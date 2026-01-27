@@ -85,14 +85,9 @@ public class FoodController {
   @GetMapping("/images/{filename}")
   public ResponseEntity<byte[]> getImage(@PathVariable String filename) {
     log.info("REST request to get image: {}", filename);
-    try {
-      byte[] imageBytes = fileStorageService.downloadFile(filename);
-      HttpHeaders headers = new HttpHeaders();
-      headers.setContentType(MediaType.IMAGE_JPEG);
-      return ResponseEntity.ok().headers(headers).body(imageBytes);
-    } catch (Exception e) {
-      log.error("Error retrieving image: {}", filename, e);
-      return ResponseEntity.notFound().build();
-    }
+    byte[] imageBytes = fileStorageService.downloadFile(filename);
+    HttpHeaders headers = new HttpHeaders();
+    headers.setContentType(MediaType.IMAGE_JPEG);
+    return ResponseEntity.ok().headers(headers).body(imageBytes);
   }
 }
