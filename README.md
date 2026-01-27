@@ -1,174 +1,110 @@
 # Foods Application
 
-A Spring Boot application for managing food-related operations with web interface and PostgreSQL database.
+A Spring Boot application for food management with image support, user authentication, and admin controls.
 
-## Table of Contents
-- [About](#about)
-- [Technologies Used](#technologies-used)
-- [Prerequisites](#prerequisites)
-- [Environment Configuration](#environment-configuration)
-- [Getting Started](#getting-started)
-- [Running the Application](#running-the-application)
-- [Testing](#testing)
-- [Docker Support](#docker-support)
-- [CI/CD Pipeline](#cicd-pipeline)
-- [Project Structure](#project-structure)
+## Features
 
-## About
+- 🍕 **Food Management**: Create, view, edit, and delete food items
+- 🖼️ **Image Support**: Upload and manage multiple images per food item  
+- 👤 **User Authentication**: Google OAuth2 + form-based login
+- 🛡️ **Admin Controls**: Admin dashboard for food management
+- 📱 **Responsive UI**: Bootstrap-based interface for all devices
+- 🏪 **File Storage**: MinIO/S3 integration for image storage
 
-This is a Spring Boot application built for food management operations. The project includes:
-- Thymeleaf-based web interface with Bootstrap styling
-- PostgreSQL database integration
-- User authentication and authorization
-- RESTful APIs for food management
-- Docker support for easy deployment
-- Environment-based configuration
+## Technologies
 
-## Technologies Used
+- **Java 21** + **Spring Boot 4.0.1**
+- **PostgreSQL** (database) + **Redis** (sessions)
+- **MinIO** (file storage) + **Thymeleaf** (templates)
+- **OAuth2** (authentication) + **Bootstrap 5** (UI)
+- **Docker Compose** (local development)
 
-- **Java 21** - Programming language
-- **Spring Boot 4.0.1** - Main framework
-- **PostgreSQL** - Primary database
-- **Thymeleaf** - Server-side template engine
-- **Bootstrap 5** - Frontend styling framework
-- **Maven** - Build tool and dependency management
-- **Lombok** - Reduces boilerplate code with annotations
-- **MapStruct** - Object mapping between DTOs and entities
-- **Docker & Docker Compose** - Containerization
+## Quick Start
 
-## Prerequisites
-
-Before running this application, make sure you have the following installed:
-
-- Java 21 or higher
-- Maven 3.6+ (or use the included Maven wrapper)
-- Docker and Docker Compose (for database services)
-
-## Environment Configuration
-
-This application uses environment variables for sensitive configuration. Follow these steps:
-
-1. **Copy the environment template**
-   ```bash
-   cp .env.example .env
-   ```
-
-2. **Edit the .env file** with your actual values:
-   ```bash
-   # Database Configuration (matches compose.yaml)
-   DB_HOST=localhost
-   DB_PORT=5432
-   DB_NAME=mydatabase
-   DB_USERNAME=myuser
-   DB_PASSWORD=secret
-   
-   # OAuth2 Configuration (optional)
-   GOOGLE_CLIENT_ID=your_google_client_id_here
-   GOOGLE_CLIENT_SECRET=your_google_client_secret_here
-   ```
-
-3. **Available Environment Variables**:
-   - DB_* - Database connection settings
-   - GOOGLE_CLIENT_* - Google OAuth2 credentials (set to 'dummy' to disable)
-   - JWT_SECRET - Secret key for JWT tokens
-   - MAIL_* - Email configuration for notifications
-   - REDIS_* - Redis configuration
-   - LOG_LEVEL - Application logging level
-
-**Important**: Never commit the .env file to version control. It's included in .gitignore.
-
-### Database DDL Settings Explained
-
-- **`validate`** - Hibernate validates the schema matches entities but makes no changes
-- **`update`** - Hibernate updates the schema to match entities, preserves existing data
-- **`create-drop`** - Hibernate drops and recreates all tables on startup (DATA LOSS!)
-
-**CRITICAL**: Never use `create-drop` in production or with real data!
-
-## Getting Started
-
-1. **Clone the repository**
-   ```bash
-   git clone <repository-url>
-   cd cev_java_hoa
-   ```
-
-2. **Set up environment configuration**
-   ```bash
-   cp .env.example .env
-   # Edit .env with your actual values
-   ```
-
-3. **Start the database services**
-   ```bash
-   docker compose up -d
-   ```
-
-4. **Build the project**
-   ```bash
-   ./mvnw clean install
-   ```
-   
-   Or on Windows:
-   ```cmd
-   mvnw.cmd clean install
-   ```
-
-### Using Maven Directly
-
+### 1. Setup Environment
 ```bash
-# Start database services first
-docker compose up -d
+# Copy environment template
+cp .env.example .env
 
-# Run with development profile (recommended)
+# Edit .env with your values:
+DB_HOST=localhost
+DB_PORT=5432
+DB_NAME=mydatabase
+DB_USERNAME=myuser
+DB_PASSWORD=secret
+
+# For image storage (MinIO)
+AWS_S3_STORAGE_ENDPOINT=http://localhost:9000
+S3_BUCKET_NAME=food-images
+S3_ACCESS_KEY=minioadmin
+S3_SECRET_KEY=minioadmin
+```
+
+### 2. Start Services
+```bash
+# Start database, Redis, and MinIO
+docker compose up -d
+```
+
+### 3. Run Application
+```bash
+# Development mode
 ./mvnw spring-boot:run -Dspring-boot.run.profiles=dev
 
-# Run with production profile (default behavior)
-./mvnw spring-boot:run -Dspring-boot.run.profiles=prod
+# Access the application
+# User Interface: http://localhost:8080
+# MinIO Console: http://localhost:9001
 ```
 
-### Docker Commands
+### 4. Default Accounts
+- **Admin**: Create via registration, then update role in database
+- **User**: Register at `/register` or login with Google OAuth2
 
-**Local Development:**
-```bash
-# Build image
-docker build -t foods-app .
+## Food Image Management
 
-# Run with Docker Compose
-docker-compose up -d
-```
-## Testing
+### For Users
+- Browse foods with images in card layout
+- Click images/names to view detailed pages
+- Add foods to cart from list or detail views
 
-Run the test suite using:
+### For Admins  
+- Upload multiple images when creating foods
+- View current images when editing foods
+- Replace all images or keep existing ones
+- Images automatically resize and optimize
 
+### File Storage
+- Images stored in MinIO (S3-compatible)
+- Automatic file naming and organization
+- Supports JPG, PNG, GIF formats
+## Development
+
+### Run Tests
 ```bash
 ./mvnw test
 ```
 
-## Docker Support
-
-The project includes Docker support via compose.yaml. To run with Docker:
-
+### Build Project
 ```bash
-docker-compose up --build
+./mvnw clean install
 ```
 
-## Project Structure
+### Profiles
+- **dev**: Development mode with detailed logging
+- **prod**: Production mode with optimized settings
+- **test**: Testing with H2 in-memory database
 
-src/
-├── main/
-│   ├── java/com/example/foods/
-│   │   ├── FoodsApplication.java
-│   │   ├── entity/
-│   │   │   └── Food.java (example entity with Lombok annotations)
-│   │   ├── dto/
-│   │   │   └── FoodDto.java (example DTO with validation)
-│   │   └── mapper/
-│   │       └── FoodMapper.java (MapStruct mapper interface)
-│   └── resources/
-│       └── application.properties
-└── test/
-    └── java/com/example/foods/
-        └── FoodsApplicationTests.java
+## API Endpoints
 
-**Note**: This README will be updated as the project evolves. Please check back for the latest information.
+### Food Management
+- `GET /api/foods` - List all foods
+- `POST /api/foods` - Create food (with images)
+- `PUT /api/foods/{id}` - Update food (with images)
+- `DELETE /api/foods/{id}` - Delete food
+- `GET /api/foods/images/{filename}` - Serve food images
+
+### Web Pages
+- `/` - Food listing (user/admin views)
+- `/foods/{id}` - Food detail page
+- `/login` - Authentication page
+- `/profile` - User profile and orders
