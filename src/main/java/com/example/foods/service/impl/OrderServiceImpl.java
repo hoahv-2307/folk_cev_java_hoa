@@ -83,6 +83,7 @@ public class OrderServiceImpl implements com.example.foods.service.OrderService 
         if (currentQuantity == null) {
           currentQuantity = 0;
         }
+
         if (currentQuantity < quantity) {
           throw new IllegalArgumentException(
               "Insufficient stock for food ID: "
@@ -306,5 +307,21 @@ public class OrderServiceImpl implements com.example.foods.service.OrderService 
     order.setStatus(OrderStatus.CANCELLED);
     orderRepository.save(order);
     log.info("Order cancelled successfully");
+  }
+
+  @Override
+  @Transactional(readOnly = true)
+  public List<OrderResponseDto> getAllOrders() {
+    log.info("Fetching all orders for admin");
+    List<Order> orders = orderRepository.findAllByOrderByCreatedAtDesc();
+    return orderMapper.toDtoList(orders);
+  }
+
+  @Override
+  @Transactional(readOnly = true)
+  public List<OrderResponseDto> getOrdersByStatus(OrderStatus status) {
+    log.info("Fetching orders with status: {}", status);
+    List<Order> orders = orderRepository.findByStatusOrderByCreatedAtDesc(status);
+    return orderMapper.toDtoList(orders);
   }
 }

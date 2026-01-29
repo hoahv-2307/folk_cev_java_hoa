@@ -30,6 +30,7 @@ public interface FoodMapper {
   @Mapping(target = "createdAt", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
   @Mapping(target = "foodImages", ignore = true)
+  @Mapping(target = "version", ignore = true)
   void updateEntityFromDto(FoodRequestDto foodDto, @MappingTarget Food food);
 
   FoodImageResponseDto toFoodImageDto(FoodImage foodImage);
