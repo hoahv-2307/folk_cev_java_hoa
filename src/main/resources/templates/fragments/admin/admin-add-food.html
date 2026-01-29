@@ -75,6 +75,31 @@
                         </div>
 
                         <div class="mb-3">
+                            <label for="foodQuantity" class="form-label">Quantity <span
+                                    class="text-danger">*</span></label>
+                            <input type="number" class="form-control" id="foodQuantity" name="quantity" min="0"
+                                th:value="${food != null} ? ${food.quantity} : '0'" required />
+                            <div class="form-text">Available stock quantity</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="foodStatus" class="form-label">Status <span class="text-danger">*</span></label>
+                            <select class="form-select" id="foodStatus" name="status" required>
+                                <option value="">Select status</option>
+                                <option value="ACTIVE" th:selected="${food != null and food.status == 'ACTIVE'}">
+                                    Active
+                                </option>
+                                <option value="INACTIVE" th:selected="${food != null and food.status == 'INACTIVE'}">
+                                    Inactive
+                                </option>
+                                <option value="DISCONTINUED" th:selected="${food != null and food.status == 'DISCONTINUED'}">
+                                    Discontinued
+                                </option>
+                            </select>
+                            <div class="form-text">Item availability status</div>
+                        </div>
+
+                        <div class="mb-3">
                             <label for="foodImages" class="form-label">Food Images</label>
                             <input type="file" class="form-control" id="foodImages" name="foodImages" multiple
                                 accept="image/*" />

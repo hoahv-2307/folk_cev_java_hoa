@@ -21,6 +21,10 @@ public interface CartMapper {
   @Mapping(target = "foodId", source = "food.id")
   @Mapping(target = "foodName", source = "food.name")
   @Mapping(target = "foodPrice", source = "food.price")
+  @Mapping(
+      target = "foodImageUrls",
+      expression =
+          "java(cartItem.getFood().getFoodImages().stream().map(img -> img.getImageUrl()).toList())")
   @Mapping(target = "subtotal", expression = "java(calculateSubtotal(cartItem))")
   CartItemDto toItemDto(CartItem cartItem);
 
