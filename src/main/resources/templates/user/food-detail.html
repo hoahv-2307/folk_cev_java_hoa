@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/common/common-libs-script :: common-head('Food Detail - Foods App')}">
+</head>
+<head>
+    <div th:replace="~{fragments/user/user-styles :: user-styles}"></div>
+</head>
+<body>
+    <!-- Navigation -->
+    <div th:replace="~{fragments/user/user-header :: user-header}"></div>
+
+    <!-- Food Detail Section -->
+    <div class="container my-5">
+        <!-- Breadcrumb -->
+        <nav aria-label="breadcrumb" class="mb-4">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="/foods" class="text-decoration-none">Menu</a></li>
+                <li class="breadcrumb-item active" aria-current="page" th:text="${food.name}">Food Name</li>
+            </ol>
+        </nav>
+
+        <div class="row">
+            <!-- Food Images Gallery -->
+            <div class="col-lg-7">
+                <div th:if="${!#lists.isEmpty(food.foodImages)}">
+                    <!-- Main Image -->
+                    <div class="main-image-container mb-3">
+                        <img th:src="@{/api/foods/images/{filename}(filename=${food.foodImages[0].imageUrl})}" 
+                             class="img-fluid rounded-3 shadow-sm" 
+                             th:alt="${food.name}"
+                             id="mainImage"
+                             style="width: 100%; height: 450px; object-fit: cover;">
+                    </div>
+                    
+                    <!-- Thumbnail Gallery (if more than one image) -->
+                    <div th:if="${#lists.size(food.foodImages) > 1}" class="thumbnail-gallery">
+                        <div class="row g-2">
+                            <div th:each="image, iterStat : ${food.foodImages}" class="col-3">
+                                <img th:src="@{/api/foods/images/{filename}(filename=${image.imageUrl})}" 
+                                     class="img-thumbnail thumbnail-image" 
+                                     th:alt="${food.name}"
+                                     style="width: 100%; height: 90px; object-fit: cover; cursor: pointer;"
+                                     th:onclick="'changeMainImage(this.src)'"
+                                     th:class="${iterStat.first} ? 'img-thumbnail thumbnail-image active' : 'img-thumbnail thumbnail-image'">
+                            </div>
+                        </div>
+                        <p class="text-muted small text-center mt-2">
+                            <i class="fas fa-images me-1"></i>
+                            <span th:text="${#lists.size(food.foodImages)}">1</span> 
+                            <span th:text="${#lists.size(food.foodImages) == 1} ? 'photo' : 'photos'">photos</span>
+                        </p>
+                    </div>
+                </div>
+                
+                <!-- No Image Placeholder -->
+                <div th:if="${#lists.isEmpty(food.foodImages)}" 
+                     class="d-flex align-items-center justify-content-center bg-light rounded-3 shadow-sm" 
+                     style="height: 450px;">
+                    <div class="text-center text-muted">
+                        <i class="fas fa-utensils fa-5x mb-3 opacity-50"></i>
+                        <p class="h5">No Images Available</p>
+                        <p>This delicious item is waiting for photos!</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Food Information -->
+            <div class="col-lg-5">
+                <div class="food-info sticky-top" style="top: 2rem;">
+                    <!-- Category Badge -->
+                    <div class="mb-3">
+                        <span class="badge bg-primary fs-6 px-3 py-2" th:text="${food.category}">Category</span>
+                    </div>
+                    
+                    <!-- Food Name -->
+                    <h1 class="display-6 mb-3 fw-bold text-dark" th:text="${food.name}">Food Name</h1>
+                    
+                    <!-- Price -->
+                    <div class="price-section mb-4">
+                        <span class="display-5 text-success fw-bold">
+                            $<span th:text="${#numbers.formatDecimal(food.price, 1, 2)}">0.00</span>
+                        </span>
+                    </div>
+                    
+                    <!-- Description -->
+                    <div class="description-section mb-4">
+                        <h6 class="text-uppercase text-muted mb-2 fw-semibold">
+                            <i class="fas fa-info-circle me-1"></i>Description
+                        </h6>
+                        <p class="text-dark lh-lg" th:text="${food.description}" th:if="${food.description != null}">
+                            Food description goes here...
+                        </p>
+                        <p class="text-muted fst-italic" th:if="${food.description == null}">
+                            No description available for this item.
+                        </p>
+                    </div>
+                    
+                    <!-- Availability Status -->
+                    <div class="availability-section mb-4">
+                        <div class="d-flex align-items-center">
+                            <h6 class="text-uppercase text-muted mb-0 me-3 fw-semibold">
+                                <i class="fas fa-boxes me-1"></i>Availability
+                            </h6>
+                            <span th:if="${food.quantity > 0 and food.status == 'ACTIVE'}" 
+                                  class="badge bg-success px-3 py-2 fs-6"
+                                  th:text="${food.quantity} + ' in stock'">0 in stock</span>
+                            <span th:if="${food.quantity == 0 or food.status != 'ACTIVE'}" 
+                                  class="badge bg-danger px-3 py-2 fs-6">
+                                <span th:if="${food.status == 'DISCONTINUED'}">Discontinued</span>
+                                <span th:if="${food.status == 'INACTIVE'}">Temporarily Unavailable</span>
+                                <span th:if="${food.quantity == 0 and food.status == 'ACTIVE'}">Out of Stock</span>
+                            </span>
+                        </div>
+                        <p th:if="${food.quantity > 0 and food.quantity <= 5 and food.status == 'ACTIVE'}" 
+                           class="text-warning small mt-1 mb-0">
+                            <i class="fas fa-exclamation-triangle me-1"></i>Only <span th:text="${food.quantity}">0</span> left!
+                        </p>
+                    </div>
+                    
+                    <!-- Action Buttons -->
+                    <div class="action-section mb-4">
+                        <div class="d-grid gap-2">
+                            <button class="btn btn-success btn-lg shadow-sm" 
+                                    th:data-id="${food.id}" 
+                                    th:data-name="${food.name}" 
+                                    th:data-price="${food.price}"
+                                    th:disabled="${food.quantity == 0 or food.status != 'ACTIVE'}"
+                                    th:class="${food.quantity > 0 and food.status == 'ACTIVE'} ? 'btn btn-success btn-lg shadow-sm' : 'btn btn-secondary btn-lg shadow-sm'"
+                                    onclick="addToCartFromButton(this)">
+                                <i class="fas fa-cart-plus me-2"></i>
+                                <span th:if="${food.status == 'DISCONTINUED'}">Item Discontinued</span>
+                                <span th:if="${food.status == 'INACTIVE'}">Currently Unavailable</span>
+                                <span th:if="${food.quantity == 0 and food.status == 'ACTIVE'}">Out of Stock</span>
+                                <span th:if="${food.quantity > 0 and food.status == 'ACTIVE'}">Add to Cart</span>
+                            </button>
+                            <button class="btn btn-outline-danger btn-lg" 
+                                    th:data-id="${food.id}"
+                                    onclick="toggleFavorite(this)">
+                                <i class="fas fa-heart me-2"></i>Add to Favorites
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Food Details Card -->
+                    <div class="card border-0 bg-light">
+                        <div class="card-header bg-transparent border-0 pb-0">
+                            <h6 class="text-uppercase text-muted mb-0 fw-semibold">
+                                <i class="fas fa-list me-1"></i>Details
+                            </h6>
+                        </div>
+                        <div class="card-body pt-2">
+                            <div class="row g-3">
+                                <div class="col-6">
+                                    <div class="detail-item">
+                                        <small class="text-muted d-block">Category</small>
+                                        <span class="fw-medium" th:text="${food.category}">Category</span>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="detail-item">
+                                        <small class="text-muted d-block">Price</small>
+                                        <span class="fw-medium text-success">
+                                            $<span th:text="${#numbers.formatDecimal(food.price, 1, 2)}">0.00</span>
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="detail-item">
+                                        <small class="text-muted d-block">Stock</small>
+                                        <span class="fw-medium" 
+                                              th:class="${food.quantity > 10} ? 'text-success' : (${food.quantity > 0} ? 'text-warning' : 'text-danger')"
+                                              th:text="${food.quantity} + ' available'">0 available</span>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="detail-item">
+                                        <small class="text-muted d-block">Added On</small>
+                                        <span class="fw-medium" th:text="${#temporals.format(food.createdAt, 'MMM dd, yyyy')}">Date</span>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="detail-item">
+                                        <small class="text-muted d-block">Images</small>
+                                        <span class="fw-medium">
+                                            <span th:text="${#lists.size(food.foodImages)}">0</span> 
+                                            <span th:text="${#lists.size(food.foodImages) == 1} ? 'photo' : 'photos'">photos</span>
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Back to Menu Button -->
+        <div class="row mt-5">
+            <div class="col-12">
+                <div class="d-flex justify-content-between align-items-center">
+                    <a href="/foods" class="btn btn-outline-secondary btn-lg">
+                        <i class="fas fa-arrow-left me-2"></i>Back to Menu
+                    </a>
+                    <div class="text-muted small">
+                        Last updated: <span th:text="${#temporals.format(food.updatedAt, 'MMM dd, yyyy HH:mm')}">Date</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cart Sidebar -->
+    <div th:replace="~{fragments/user/user-cart :: user-cart}"></div>
+
+    <!-- Scripts -->
+    <div th:replace="~{fragments/common/common-libs-script :: common-libs-script}"></div>
+    <div th:replace="~{fragments/user/user-scripts :: user-scripts}"></div>
+    <div th:replace="~{fragments/common/common-script :: common-script}"></div>
+
+    <!-- Custom JavaScript for Image Gallery -->
+    <script>
+        function changeMainImage(newSrc) {
+            const mainImage = document.getElementById('mainImage');
+            if (mainImage) {
+                mainImage.src = newSrc;
+                
+                // Update thumbnail active state
+                document.querySelectorAll('.thumbnail-image').forEach(thumb => {
+                    thumb.classList.remove('active');
+                });
+                event.target.classList.add('active');
+                
+                // Smooth transition effect
+                mainImage.style.opacity = '0.7';
+                setTimeout(() => {
+                    mainImage.style.opacity = '1';
+                }, 200);
+            }
+        }
+
+        // Keyboard navigation for image gallery
+        document.addEventListener('keydown', function(e) {
+            const thumbnails = document.querySelectorAll('.thumbnail-image');
+            const activeThumbnail = document.querySelector('.thumbnail-image.active');
+            
+            if (thumbnails.length > 1 && activeThumbnail) {
+                let currentIndex = Array.from(thumbnails).indexOf(activeThumbnail);
+                
+                if (e.key === 'ArrowLeft' && currentIndex > 0) {
+                    e.preventDefault();
+                    thumbnails[currentIndex - 1].click();
+                } else if (e.key === 'ArrowRight' && currentIndex < thumbnails.length - 1) {
+                    e.preventDefault();
+                    thumbnails[currentIndex + 1].click();
+                }
+            }
+        });
+
+        // Add loading state to add to cart button
+        function addToCartFromButton(button) {
+            const originalText = button.innerHTML;
+            button.disabled = true;
+            button.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Adding...';
+            
+            // Your existing cart logic here
+            // After success/failure, restore button:
+            setTimeout(() => {
+                button.disabled = false;
+                button.innerHTML = originalText;
+            }, 1000);
+        }
+
+        // Initialize tooltips if Bootstrap tooltips are available
+        document.addEventListener('DOMContentLoaded', function() {
+            if (typeof bootstrap !== 'undefined' && bootstrap.Tooltip) {
+                const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+                tooltipTriggerList.map(function(tooltipTriggerEl) {
+                    return new bootstrap.Tooltip(tooltipTriggerEl);
+                });
+            }
+        });
+    </script>
+
+    <!-- Custom Styles -->
+    <style>
+        .thumbnail-image.active {
+            border: 3px solid #198754 !important;
+            transform: scale(1.05);
+            transition: all 0.2s ease;
+        }
+        
+        .thumbnail-image:hover {
+            border: 2px solid #198754 !important;
+            transform: scale(1.02);
+            transition: all 0.2s ease;
+        }
+        
+        .main-image-container {
+            position: relative;
+            overflow: hidden;
+            border-radius: 0.75rem;
+        }
+        
+        #mainImage {
+            transition: opacity 0.3s ease;
+        }
+        
+        .food-info {
+            padding-left: 2rem;
+        }
+        
+        .detail-item {
+            padding: 0.5rem 0;
+        }
+        
+        .price-section {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            padding: 1rem;
+            border-radius: 0.5rem;
+            border-left: 4px solid #198754;
+        }
+        
+        .action-section .btn {
+            font-weight: 500;
+            letter-spacing: 0.025em;
+        }
+        
+        .breadcrumb-item a:hover {
+            color: #198754 !important;
+        }
+        
+        @media (max-width: 991.98px) {
+            .food-info {
+                padding-left: 0;
+                margin-top: 2rem;
+            }
+            
+            .sticky-top {
+                position: relative !important;
+            }
+        }
+        
+        @media (max-width: 576px) {
+            .thumbnail-gallery .col-3 {
+                flex: 0 0 50%;
+                max-width: 50%;
+            }
+        }
+    </style>
+</body>
+</html>

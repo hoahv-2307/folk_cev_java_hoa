@@ -41,6 +41,16 @@ public class Order {
   @Column(nullable = false)
   private OrderStatus status;
 
+  @Column(length = 50)
+  @Builder.Default
+  private String paymentMethod = "cash"; // "cash" or "card"
+
+  @Column(length = 100)
+  private String paymentIntentId; // Stripe payment intent ID for card payments
+
+  @Column(length = 50)
+  private String paymentStatus; // "pending", "completed", "failed", "canceled"
+
   @Column(name = "created_at")
   private LocalDateTime createdAt;
 

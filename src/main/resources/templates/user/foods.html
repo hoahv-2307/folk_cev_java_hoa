@@ -20,17 +20,16 @@
                  th:data-name="${food.name}" th:data-id="${food.id}">
                 <div class="card meal-card position-relative h-100">
                     <!-- Food Image -->
-                    <div th:if="${!#lists.isEmpty(food.foodImages)}" class="card-img-wrapper">
+                    <div th:if="${!#lists.isEmpty(food.foodImages)}" class="food-img-wrapper" th:data-id="${food.id}">
                         <img th:src="@{/api/foods/images/{filename}(filename=${food.foodImages[0].imageUrl})}" 
                              class="card-img-top food-image" 
                              th:alt="${food.name}"
                              style="height: 200px; object-fit: cover; cursor: pointer;"
-                             th:onclick="'window.location.href=\\'/foods/' + ${food.id} + '\\''">
+                             th:onerror="this.onerror=null; this.src='/no-image.png';" />
                     </div>
-                    <div th:if="${#lists.isEmpty(food.foodImages)}" 
-                         class="card-img-top d-flex align-items-center justify-content-center bg-light" 
-                         style="height: 200px; cursor: pointer;"
-                         th:onclick="'window.location.href=\\'/foods/' + ${food.id} + '\\''">
+                    <div th:if="${#lists.isEmpty(food.foodImages)}"  th:data-id="${food.id}"
+                         class="food-img-wrapper d-flex align-items-center justify-content-center bg-light" 
+                         style="height: 200px; cursor: pointer;">
                          <i class="fas fa-utensils fa-3x text-muted"></i>
                     </div>
                     
@@ -45,7 +44,22 @@
                         <a th:href="@{/foods/{id}(id=${food.id})}" class="text-decoration-none">
                             <h5 class="card-title mt-3 mb-2" th:text="${food.name}">Food Name</h5>
                         </a>
-                        <p class="card-text text-muted mb-4" th:text="${food.description}">Description</p>
+                        <p class="card-text text-muted mb-3" th:text="${food.description}">Description</p>
+                        
+                        <!-- Availability Status -->
+                        <div class="mb-3">
+                            <span th:if="${food.quantity > 0 and food.status == 'ACTIVE'}" 
+                                  class="badge bg-success small"
+                                  th:text="${food.quantity} + ' in stock'">0 in stock</span>
+                            <span th:if="${food.quantity == 0 or food.status != 'ACTIVE'}" 
+                                  class="badge bg-danger small">
+                                <span th:if="${food.status == 'DISCONTINUED'}">Discontinued</span>
+                                <span th:if="${food.status == 'INACTIVE'}">Temporarily Unavailable</span>
+                                <span th:if="${food.quantity == 0 and food.status == 'ACTIVE'}">Out of Stock</span>
+                            </span>
+                            <span th:if="${food.quantity > 0 and food.quantity <= 5 and food.status == 'ACTIVE'}" 
+                                  class="badge bg-warning small ms-1">Low Stock</span>
+                        </div>
                         
                         <!-- Action Buttons -->
                         <div class="action-buttons">
@@ -54,12 +68,17 @@
                                     onclick="toggleFavorite(this)">
                                 <i class="fas fa-heart"></i>
                             </button>
-                            <button class="btn btn-primary btn-sm" 
+                            <button th:class="${food.quantity > 0 and food.status == 'ACTIVE'} ? 'btn btn-primary btn-sm' : 'btn btn-secondary btn-sm'"
                                     th:data-id="${food.id}" 
                                     th:data-name="${food.name}" 
                                     th:data-price="${food.price}"
+                                    th:disabled="${food.quantity == 0 or food.status != 'ACTIVE'}"
                                     onclick="addToCartFromButton(this)">
-                                <i class="fas fa-plus me-1"></i>Add
+                                <i class="fas fa-plus me-1"></i>
+                                <span th:if="${food.status == 'DISCONTINUED'}">Discontinued</span>
+                                <span th:if="${food.status == 'INACTIVE'}">Unavailable</span>
+                                <span th:if="${food.quantity == 0 and food.status == 'ACTIVE'}">Sold Out</span>
+                                <span th:if="${food.quantity > 0 and food.status == 'ACTIVE'}">Add</span>
                             </button>
                         </div>
                     </div>

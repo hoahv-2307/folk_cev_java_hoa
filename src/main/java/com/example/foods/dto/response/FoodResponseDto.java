@@ -17,6 +17,8 @@ public class FoodResponseDto {
   private String description;
   private String category;
   private Double price;
+  private Integer quantity;
+  private String status;
   private List<FoodImageResponseDto> foodImages;
   private LocalDateTime createdAt;
   private LocalDateTime updatedAt;

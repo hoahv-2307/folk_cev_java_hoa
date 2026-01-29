@@ -31,6 +31,13 @@ public class FoodRequestDto {
   @Positive(message = "Price must be positive")
   private Double price;
 
+  @NotNull(message = "Quantity is required")
+  @Positive(message = "Quantity must be positive")
+  private Integer quantity;
+
+  @NotBlank(message = "Status is required")
+  private String status;
+
   private List<MultipartFile> foodImages;
 
   private LocalDateTime createdAt;

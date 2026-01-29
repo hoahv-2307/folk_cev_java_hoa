@@ -128,12 +128,14 @@
                                         <th>Image</th>
                                         <th>Category</th>
                                         <th>Price</th>
+                                        <th>Quantity</th>
+                                        <th>Status</th>
                                         <th>Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     <tr th:if="${#lists.isEmpty(foods)}">
-                                        <td colspan="7" class="text-center text-muted py-4">
+                                        <td colspan="9" class="text-center text-muted py-4">
                                             <i class="fas fa-utensils fa-2x mb-2 opacity-50"></i>
                                             <br />No foods found
                                         </td>
@@ -165,6 +167,17 @@
                                         </td>
                                         <td>
                                             <strong class="text-success">$<span th:text="${food.price}">0.00</span></strong>
+                                        </td>
+                                        <td>
+                                            <span class="badge" 
+                                                  th:class="${food.quantity > 10} ? 'badge bg-success' : (${food.quantity > 0} ? 'badge bg-warning' : 'badge bg-danger')"
+                                                  th:text="${food.quantity}">0</span>
+                                            <small class="text-muted d-block">in stock</small>
+                                        </td>
+                                        <td>
+                                            <span class="badge"
+                                                  th:class="${food.status == 'ACTIVE'} ? 'badge bg-success' : (${food.status == 'INACTIVE'} ? 'badge bg-warning' : 'badge bg-danger')"
+                                                  th:text="${food.status}">ACTIVE</span>
                                         </td>
                                         <td>
                                             <button class="btn btn-sm btn-outline-primary me-1" th:data-food-id="${food.id}" title="Edit">

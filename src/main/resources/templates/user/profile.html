@@ -146,9 +146,7 @@
                                     <small class="text-muted" th:text="${#temporals.format(order.createdAt, 'MMM dd, yyyy HH:mm')}">Date</small>
                                 </div>
                                 <span class="status-badge" 
-                                      th:classappend="${order.status == 'PENDING'} ? 'status-pending' : 
-                                                       ${order.status == 'COMPLETED'} ? 'status-completed' : 
-                                                       'status-cancelled'"
+                                      th:classappend="${order.status == 'PENDING' ? 'status-pending' : order.status == 'COMPLETED' ? 'status-completed' : 'status-cancelled'}"
                                       th:text="${order.status}">Status</span>
                             </div>
                             

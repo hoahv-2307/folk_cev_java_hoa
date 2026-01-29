@@ -18,6 +18,9 @@ public class OrderResponseDto {
   private List<OrderItemDto> items;
   private Double totalAmount;
   private String status;
+  private String paymentMethod;
+  private String paymentIntentId;
+  private String paymentStatus;
   private LocalDateTime createdAt;
   private LocalDateTime updatedAt;
 }

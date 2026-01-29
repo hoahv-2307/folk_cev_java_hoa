@@ -33,6 +33,14 @@ public class Food {
   @Column(nullable = false)
   private Double price;
 
+  @Column(nullable = false)
+  @Builder.Default
+  private Integer quantity = 0;
+
+  @Column(length = 50)
+  @Builder.Default
+  private String status = "ACTIVE";
+
   @OneToMany(mappedBy = "food", cascade = CascadeType.ALL, orphanRemoval = true)
   @Builder.Default
   private List<FoodImage> foodImages = new ArrayList<>();
