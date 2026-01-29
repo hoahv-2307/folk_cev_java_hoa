@@ -18,4 +18,8 @@ public interface OrderService {
   OrderResponseDto updateOrderStatus(Long orderId, OrderStatus status);
 
   void cancelOrder(Long orderId);
+
+  List<OrderResponseDto> getAllOrders();
+
+  List<OrderResponseDto> getOrdersByStatus(OrderStatus status);
 }

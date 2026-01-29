@@ -1,5 +1,6 @@
 package com.example.foods.controller;
 
+import com.example.foods.constant.OrderStatus;
 import com.example.foods.dto.request.CheckoutRequestDto;
 import com.example.foods.dto.request.OrderItemRequestDto;
 import com.example.foods.dto.request.UserRequestDto;
@@ -228,5 +229,63 @@ public class WebController {
       redirectAttributes.addFlashAttribute("errorMessage", errorMessage);
       return "redirect:/checkout";
     }
+  }
+
+  @GetMapping("/admin/orders")
+  public String showAdminOrders(
+      @RequestParam(value = "status", required = false) String status, Model model) {
+    log.info("Admin navigating to orders page with status filter: {}", status);
+
+    if (status != null && !status.isEmpty()) {
+      try {
+        OrderStatus orderStatus = OrderStatus.valueOf(status.toUpperCase());
+        model.addAttribute("orders", orderService.getOrdersByStatus(orderStatus));
+      } catch (IllegalArgumentException e) {
+        log.warn("Invalid status filter: {}", status);
+        model.addAttribute("orders", orderService.getAllOrders());
+      }
+    } else {
+      model.addAttribute("orders", orderService.getAllOrders());
+    }
+
+    model.addAttribute("orderStatuses", OrderStatus.values());
+    model.addAttribute("currentStatus", status);
+    return "admin/orders";
+  }
+
+  @GetMapping("/admin/orders/{id}")
+  public String showOrderDetails(@PathVariable Long id, Model model) {
+    log.info("Admin viewing order details for order ID: {}", id);
+    try {
+      var order = orderService.getOrderById(id);
+      model.addAttribute("order", order);
+      model.addAttribute("orderStatuses", OrderStatus.values());
+      return "admin/order-detail";
+    } catch (IllegalArgumentException e) {
+      log.error("Order not found: {}", e.getMessage());
+      return "redirect:/admin/orders?error=Order not found";
+    }
+  }
+
+  @PostMapping("/admin/orders/{id}/status")
+  public String updateOrderStatus(
+      @PathVariable Long id,
+      @RequestParam("status") String status,
+      RedirectAttributes redirectAttributes) {
+    log.info("Admin updating order {} status to: {}", id, status);
+
+    try {
+      OrderStatus newStatus = OrderStatus.valueOf(status.toUpperCase());
+      orderService.updateOrderStatus(id, newStatus);
+      redirectAttributes.addFlashAttribute("successMessage", "Order status updated successfully");
+    } catch (IllegalArgumentException e) {
+      log.error("Invalid status or order not found: {}", e.getMessage());
+      redirectAttributes.addFlashAttribute("errorMessage", "Failed to update order status");
+    } catch (Exception e) {
+      log.error("Error updating order status: {}", e.getMessage());
+      redirectAttributes.addFlashAttribute("errorMessage", "Error: " + e.getMessage());
+    }
+
+    return "redirect:/admin/orders/" + id;
   }
 }

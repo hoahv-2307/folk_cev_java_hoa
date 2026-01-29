@@ -15,4 +15,5 @@ public class OrderItemDto {
   private String foodName;
   private Integer quantity;
   private Double price;
+  private String foodImageUrl;
 }

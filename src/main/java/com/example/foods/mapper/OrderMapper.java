@@ -22,7 +22,16 @@ public interface OrderMapper {
 
   @Mapping(target = "foodId", source = "food.id")
   @Mapping(target = "foodName", source = "food.name")
+  @Mapping(target = "foodImageUrl", expression = "java(getFoodImageUrl(orderItem))")
   OrderItemDto toItemDto(OrderItem orderItem);
 
   List<OrderItemDto> toItemDtoList(List<OrderItem> orderItems);
+
+  default String getFoodImageUrl(OrderItem orderItem) {
+    if (orderItem.getFood().getFoodImages() != null
+        && !orderItem.getFood().getFoodImages().isEmpty()) {
+      return orderItem.getFood().getFoodImages().get(0).getImageUrl();
+    }
+    return "";
+  }
 }
