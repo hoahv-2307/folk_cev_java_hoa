@@ -29,7 +29,6 @@ public class PaymentServiceImpl implements PaymentService {
           PaymentIntentCreateParams.builder()
               .setAmount(request.getAmount())
               .setCurrency(request.getCurrency())
-              .addPaymentMethodType("card")
               .setAutomaticPaymentMethods(
                   PaymentIntentCreateParams.AutomaticPaymentMethods.builder()
                       .setEnabled(true)

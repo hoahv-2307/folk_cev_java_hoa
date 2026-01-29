@@ -41,6 +41,9 @@ public class Food {
   @Builder.Default
   private String status = "ACTIVE";
 
+  @Version
+  private Long version;
+
   @OneToMany(mappedBy = "food", cascade = CascadeType.ALL, orphanRemoval = true)
   @Builder.Default
   private List<FoodImage> foodImages = new ArrayList<>();

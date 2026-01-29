@@ -256,20 +256,6 @@
             }
         });
 
-        // Add loading state to add to cart button
-        function addToCartFromButton(button) {
-            const originalText = button.innerHTML;
-            button.disabled = true;
-            button.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Adding...';
-            
-            // Your existing cart logic here
-            // After success/failure, restore button:
-            setTimeout(() => {
-                button.disabled = false;
-                button.innerHTML = originalText;
-            }, 1000);
-        }
-
         // Initialize tooltips if Bootstrap tooltips are available
         document.addEventListener('DOMContentLoaded', function() {
             if (typeof bootstrap !== 'undefined' && bootstrap.Tooltip) {

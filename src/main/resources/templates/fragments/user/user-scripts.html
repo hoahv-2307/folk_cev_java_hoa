@@ -15,13 +15,23 @@
             addImageHandler();
         });
 
-        document.getElementById('searchInput').addEventListener('keyup', filterFoods);
-        document.getElementById('categoryFilter').addEventListener('change', filterFoods);
-        document.getElementById('priceSort').addEventListener('change', sortFoods);
+        const searchInput = document.getElementById('searchInput');
+        if (searchInput) {
+            searchInput.addEventListener('keyup', filterFoods);
+        }
 
+        const categoryFilter = document.getElementById('categoryFilter');
+        if (categoryFilter) {
+            categoryFilter.addEventListener('change', filterFoods);
+        }
+
+        const priceSort = document.getElementById('priceSort');
+        if (priceSort) {
+            priceSort.addEventListener('change', sortFoods);
+        }
         function filterFoods() {
-            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
-            const category = document.getElementById('categoryFilter').value;
+            const searchTerm = searchInput ? searchInput.value.toLowerCase() : '';
+            const category = categoryFilter ? categoryFilter.value : '';
             const foodItems = document.querySelectorAll('.food-item');
             let visibleCount = 0;
 

@@ -62,6 +62,12 @@ public class OrderServiceImpl implements com.example.foods.service.OrderService 
             "Quantity must be at least 1 for food ID: " + itemDto.getFoodId());
       }
 
+      if (food.getQuantity() < quantity) {
+        throw new IllegalArgumentException(
+            "Insufficient stock for food ID: " + itemDto.getFoodId() + 
+            ". Available: " + food.getQuantity() + ", Requested: " + quantity);
+      }
+
       OrderItem orderItem =
           OrderItem.builder()
               .order(order)
@@ -72,6 +78,10 @@ public class OrderServiceImpl implements com.example.foods.service.OrderService 
 
       order.getItems().add(orderItem);
       totalAmount += food.getPrice() * quantity;
+      
+      // Decrement food inventory
+      food.setQuantity(food.getQuantity() - quantity);
+      foodRepository.save(food);
     }
 
     order.setTotalAmount(totalAmount);
@@ -126,6 +136,18 @@ public class OrderServiceImpl implements com.example.foods.service.OrderService 
             "Quantity must be at least 1 for food ID: " + itemDto.getFoodId());
       }
 
+      if (!"ACTIVE".equals(food.getStatus())) {
+        throw new IllegalArgumentException(
+            "Food item is not available for order (status: " + food.getStatus() + 
+            ") for food ID: " + itemDto.getFoodId());
+      }
+
+      if (food.getQuantity() < quantity) {
+        throw new IllegalArgumentException(
+            "Insufficient stock for food ID: " + itemDto.getFoodId() + 
+            ". Available: " + food.getQuantity() + ", Requested: " + quantity);
+      }
+
       OrderItem orderItem =
           OrderItem.builder()
               .order(order)
@@ -136,6 +158,9 @@ public class OrderServiceImpl implements com.example.foods.service.OrderService 
 
       order.getItems().add(orderItem);
       totalAmount += food.getPrice() * quantity;
+      
+      food.setQuantity(food.getQuantity() - quantity);
+      foodRepository.save(food);
     }
 
     order.setTotalAmount(totalAmount);

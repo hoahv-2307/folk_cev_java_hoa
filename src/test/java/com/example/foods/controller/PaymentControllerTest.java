@@ -11,16 +11,21 @@ import com.example.foods.dto.response.PaymentIntentResponseDto;
 import com.example.foods.service.PaymentService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
+@SpringBootTest
+@ActiveProfiles("test")
 class PaymentControllerTest {
 
   @Autowired private MockMvc mockMvc;
 
-  private PaymentService paymentService;
+  @Mock private PaymentService paymentService;
 
   @Autowired private ObjectMapper objectMapper;
 
