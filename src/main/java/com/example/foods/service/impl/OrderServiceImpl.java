@@ -36,9 +36,10 @@ public class OrderServiceImpl implements com.example.foods.service.OrderService 
   private final PaymentService paymentService;
 
   @Override
-  @Retryable(retryFor = {OptimisticLockException.class, OptimisticLockingFailureException.class}, 
-             maxAttempts = 3, 
-             backoff = @Backoff(delay = 100, multiplier = 2))
+  @Retryable(
+      retryFor = {OptimisticLockException.class, OptimisticLockingFailureException.class},
+      maxAttempts = 3,
+      backoff = @Backoff(delay = 100, multiplier = 2))
   public OrderResponseDto createOrder(Long userId, CreateOrderRequestDto orderDto) {
     try {
       log.info("Creating order for user ID: {}", userId);
@@ -56,69 +57,84 @@ public class OrderServiceImpl implements com.example.foods.service.OrderService 
 
       double totalAmount = 0.0;
 
-    for (var itemDto : orderDto.getItems()) {
-      Food food =
-          foodRepository
-              .findById(itemDto.getFoodId())
-              .orElseThrow(
-                  () ->
-                      new IllegalArgumentException(
-                          "Food not found with ID: " + itemDto.getFoodId()));
-      Integer quantity = itemDto.getQuantity();
-      if (quantity == null || quantity < 1) {
-        throw new IllegalArgumentException(
-            "Quantity must be at least 1 for food ID: " + itemDto.getFoodId());
+      for (var itemDto : orderDto.getItems()) {
+        Food food =
+            foodRepository
+                .findById(itemDto.getFoodId())
+                .orElseThrow(
+                    () ->
+                        new IllegalArgumentException(
+                            "Food not found with ID: " + itemDto.getFoodId()));
+        Integer quantity = itemDto.getQuantity();
+        if (quantity == null || quantity < 1) {
+          throw new IllegalArgumentException(
+              "Quantity must be at least 1 for food ID: " + itemDto.getFoodId());
+        }
+
+        if (food.getVersion() == null) {
+          throw new IllegalStateException("Food version is null for food ID: " + food.getId());
+        }
+
+        if (!"ACTIVE".equals(food.getStatus())) {
+          throw new IllegalArgumentException(
+              "Food item is not available for order (status: "
+                  + food.getStatus()
+                  + ") for food ID: "
+                  + itemDto.getFoodId());
+        }
+
+        Integer currentQuantity = food.getQuantity();
+        if (currentQuantity == null) {
+          currentQuantity = 0;
+        }
+        
+        if (currentQuantity < quantity) {
+          throw new IllegalArgumentException(
+              "Insufficient stock for food ID: "
+                  + itemDto.getFoodId()
+                  + ". Available: "
+                  + currentQuantity
+                  + ", Requested: "
+                  + quantity);
+        }
+
+        OrderItem orderItem =
+            OrderItem.builder()
+                .order(order)
+                .food(food)
+                .quantity(quantity)
+                .price(food.getPrice())
+                .build();
+
+        order.getItems().add(orderItem);
+        totalAmount += food.getPrice() * quantity;
+
+        food.setQuantity(currentQuantity - quantity);
+        foodRepository.save(food);
       }
 
-      if (!"ACTIVE".equals(food.getStatus())) {
-        throw new IllegalArgumentException(
-            "Food item is not available for order (status: " + food.getStatus() + 
-            ") for food ID: " + itemDto.getFoodId());
-      }
+      order.setTotalAmount(totalAmount);
+      Order savedOrder = orderRepository.save(order);
 
-      if (food.getQuantity() < quantity) {
-        throw new IllegalArgumentException(
-            "Insufficient stock for food ID: "
-                + itemDto.getFoodId()
-                + ". Available: "
-                + food.getQuantity()
-                + ", Requested: "
-                + quantity);
-      }
-
-      OrderItem orderItem =
-          OrderItem.builder()
-              .order(order)
-              .food(food)
-              .quantity(quantity)
-              .price(food.getPrice())
-              .build();
-
-      order.getItems().add(orderItem);
-      totalAmount += food.getPrice() * quantity;
-
-      food.setQuantity(food.getQuantity() - quantity);
-      foodRepository.save(food);
-    }
-
-    order.setTotalAmount(totalAmount);
-    Order savedOrder = orderRepository.save(order);
-
-    log.info("Order created successfully with ID: {}", savedOrder.getId());
-    return orderMapper.toDto(savedOrder);
+      log.info("Order created successfully with ID: {}", savedOrder.getId());
+      return orderMapper.toDto(savedOrder);
     } catch (OptimisticLockException | OptimisticLockingFailureException ex) {
-      log.warn("Inventory conflict detected for user {}. Item was modified by another transaction. Retrying...", userId);
+      log.warn(
+          "Inventory conflict detected for user {}. Item was modified by another transaction. Retrying...",
+          userId);
       throw ex;
     } catch (Exception ex) {
       log.error("Error creating order for user ID: {}", userId, ex);
-      throw new RuntimeException("Unable to complete your order due to high demand. Please try again.", ex);
+      throw new RuntimeException(
+          "Unable to complete your order due to high demand. Please try again.", ex);
     }
   }
 
   @Override
-  @Retryable(retryFor = {OptimisticLockException.class, OptimisticLockingFailureException.class}, 
-             maxAttempts = 3, 
-             backoff = @Backoff(delay = 100, multiplier = 2))
+  @Retryable(
+      retryFor = {OptimisticLockException.class, OptimisticLockingFailureException.class},
+      maxAttempts = 3,
+      backoff = @Backoff(delay = 100, multiplier = 2))
   public OrderResponseDto createOrderWithPayment(Long userId, CheckoutRequestDto checkoutDto) {
     try {
       log.info(
@@ -135,107 +151,115 @@ public class OrderServiceImpl implements com.example.foods.service.OrderService 
         throw new IllegalArgumentException("Order must contain at least one item");
       }
 
-   
-    Order order =
-        Order.builder()
-            .user(user)
-            .totalAmount(0.0)
-            .status(OrderStatus.PENDING)
-            .paymentMethod(checkoutDto.getPaymentMethod())
-            .paymentIntentId(checkoutDto.getPaymentIntentId())
-            .paymentStatus("pending")
-            .build();
-
-    double totalAmount = 0.0;
-
-   
-    for (var itemDto : checkoutDto.getItems()) {
-      Food food =
-          foodRepository
-              .findById(itemDto.getFoodId())
-              .orElseThrow(
-                  () ->
-                      new IllegalArgumentException(
-                          "Food not found with ID: " + itemDto.getFoodId()));
-
-      Integer quantity = itemDto.getQuantity();
-      if (quantity == null || quantity < 1) {
-        throw new IllegalArgumentException(
-            "Quantity must be at least 1 for food ID: " + itemDto.getFoodId());
-      }
-
-      if (!"ACTIVE".equals(food.getStatus())) {
-        throw new IllegalArgumentException(
-            "Food item is not available for order (status: "
-                + food.getStatus()
-                + ") for food ID: "
-                + itemDto.getFoodId());
-      }
-
-      if (food.getQuantity() < quantity) {
-        throw new IllegalArgumentException(
-            "Insufficient stock for food ID: "
-                + itemDto.getFoodId()
-                + ". Available: "
-                + food.getQuantity()
-                + ", Requested: "
-                + quantity);
-      }
-
-      OrderItem orderItem =
-          OrderItem.builder()
-              .order(order)
-              .food(food)
-              .quantity(quantity)
-              .price(food.getPrice())
+      Order order =
+          Order.builder()
+              .user(user)
+              .totalAmount(0.0)
+              .status(OrderStatus.PENDING)
+              .paymentMethod(checkoutDto.getPaymentMethod())
+              .paymentIntentId(checkoutDto.getPaymentIntentId())
+              .paymentStatus("pending")
               .build();
 
-      order.getItems().add(orderItem);
-      totalAmount += food.getPrice() * quantity;
+      double totalAmount = 0.0;
 
-      food.setQuantity(food.getQuantity() - quantity);
-      foodRepository.save(food);
-    }
+      for (var itemDto : checkoutDto.getItems()) {
+        Food food =
+            foodRepository
+                .findById(itemDto.getFoodId())
+                .orElseThrow(
+                    () ->
+                        new IllegalArgumentException(
+                            "Food not found with ID: " + itemDto.getFoodId()));
 
-    order.setTotalAmount(totalAmount);
+        Integer quantity = itemDto.getQuantity();
+        if (quantity == null || quantity < 1) {
+          throw new IllegalArgumentException(
+              "Quantity must be at least 1 for food ID: " + itemDto.getFoodId());
+        }
 
-    if ("card".equals(checkoutDto.getPaymentMethod()) && checkoutDto.getPaymentIntentId() != null) {
-      boolean paymentConfirmed = paymentService.confirmPayment(checkoutDto.getPaymentIntentId());
+        if (!"ACTIVE".equals(food.getStatus())) {
+          throw new IllegalArgumentException(
+              "Food item is not available for order (status: "
+                  + food.getStatus()
+                  + ") for food ID: "
+                  + itemDto.getFoodId());
+        }
 
-      if (paymentConfirmed) {
-        order.setPaymentStatus("completed");
-        order.setStatus(OrderStatus.PROCESSING);
-        log.info("Card payment confirmed for order");
-      } else {
-        order.setPaymentStatus("failed");
-        order.setStatus(OrderStatus.CANCELLED);
-        log.warn("Card payment failed for order");
-        throw new RuntimeException("Payment failed. Please try again.");
+        Integer currentQuantity = food.getQuantity();
+        if (currentQuantity == null) {
+          currentQuantity = 0;
+        }
+        
+        if (currentQuantity < quantity) {
+          throw new IllegalArgumentException(
+              "Insufficient stock for food ID: "
+                  + itemDto.getFoodId()
+                  + ". Available: "
+                  + currentQuantity
+                  + ", Requested: "
+                  + quantity);
+        }
+
+        OrderItem orderItem =
+            OrderItem.builder()
+                .order(order)
+                .food(food)
+                .quantity(quantity)
+                .price(food.getPrice())
+                .build();
+
+        order.getItems().add(orderItem);
+        totalAmount += food.getPrice() * quantity;
+
+        food.setQuantity(currentQuantity - quantity);
+        foodRepository.save(food);
       }
-    } else if ("cash".equals(checkoutDto.getPaymentMethod())) {
-      order.setPaymentStatus("pending");
-      log.info("Cash on delivery order created");
-    }
 
-    Order savedOrder = orderRepository.save(order);
-    log.info(
-        "Order created successfully with ID: {} and payment method: {}",
-        savedOrder.getId(),
-        savedOrder.getPaymentMethod());
+      order.setTotalAmount(totalAmount);
 
-    return orderMapper.toDto(savedOrder);
+      if ("card".equals(checkoutDto.getPaymentMethod())
+          && checkoutDto.getPaymentIntentId() != null) {
+        boolean paymentConfirmed = paymentService.confirmPayment(checkoutDto.getPaymentIntentId());
+
+        if (paymentConfirmed) {
+          order.setPaymentStatus("completed");
+          order.setStatus(OrderStatus.PROCESSING);
+          log.info("Card payment confirmed for order");
+        } else {
+          order.setPaymentStatus("failed");
+          order.setStatus(OrderStatus.CANCELLED);
+          log.warn("Card payment failed for order");
+          throw new RuntimeException("Payment failed. Please try again.");
+        }
+      } else if ("cash".equals(checkoutDto.getPaymentMethod())) {
+        order.setPaymentStatus("pending");
+        log.info("Cash on delivery order created");
+      }
+
+      Order savedOrder = orderRepository.save(order);
+      log.info(
+          "Order created successfully with ID: {} and payment method: {}",
+          savedOrder.getId(),
+          savedOrder.getPaymentMethod());
+
+      return orderMapper.toDto(savedOrder);
     } catch (OptimisticLockException | OptimisticLockingFailureException ex) {
-      log.warn("Inventory conflict detected during checkout for user {}. Item was modified by another transaction. Retrying...", userId);
+      log.warn(
+          "Inventory conflict detected during checkout for user {}. Item was modified by another transaction. Retrying...",
+          userId);
       throw ex;
     } catch (RuntimeException ex) {
       if (ex.getMessage().contains("Payment failed")) {
         throw ex;
       }
       log.error("Error creating order with payment for user ID: {}", userId, ex);
-      throw new RuntimeException("Unable to complete your order due to high demand. Please try again.", ex);
+      throw new RuntimeException(
+          "Unable to complete your order due to high demand. Please try again.", ex);
     } catch (Exception ex) {
       log.error("Unexpected error creating order with payment for user ID: {}", userId, ex);
-      throw new RuntimeException("Unable to process your order at this time. Please try again later.", ex);
+      throw new RuntimeException(
+          "Unable to process your order at this time. Please try again later.", ex);
     }
   }
 
