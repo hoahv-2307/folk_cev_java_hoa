@@ -64,8 +64,12 @@ public class OrderServiceImpl implements com.example.foods.service.OrderService 
 
       if (food.getQuantity() < quantity) {
         throw new IllegalArgumentException(
-            "Insufficient stock for food ID: " + itemDto.getFoodId() + 
-            ". Available: " + food.getQuantity() + ", Requested: " + quantity);
+            "Insufficient stock for food ID: "
+                + itemDto.getFoodId()
+                + ". Available: "
+                + food.getQuantity()
+                + ", Requested: "
+                + quantity);
       }
 
       OrderItem orderItem =
@@ -78,7 +82,7 @@ public class OrderServiceImpl implements com.example.foods.service.OrderService 
 
       order.getItems().add(orderItem);
       totalAmount += food.getPrice() * quantity;
-      
+
       // Decrement food inventory
       food.setQuantity(food.getQuantity() - quantity);
       foodRepository.save(food);
@@ -138,14 +142,20 @@ public class OrderServiceImpl implements com.example.foods.service.OrderService 
 
       if (!"ACTIVE".equals(food.getStatus())) {
         throw new IllegalArgumentException(
-            "Food item is not available for order (status: " + food.getStatus() + 
-            ") for food ID: " + itemDto.getFoodId());
+            "Food item is not available for order (status: "
+                + food.getStatus()
+                + ") for food ID: "
+                + itemDto.getFoodId());
       }
 
       if (food.getQuantity() < quantity) {
         throw new IllegalArgumentException(
-            "Insufficient stock for food ID: " + itemDto.getFoodId() + 
-            ". Available: " + food.getQuantity() + ", Requested: " + quantity);
+            "Insufficient stock for food ID: "
+                + itemDto.getFoodId()
+                + ". Available: "
+                + food.getQuantity()
+                + ", Requested: "
+                + quantity);
       }
 
       OrderItem orderItem =
@@ -158,7 +168,7 @@ public class OrderServiceImpl implements com.example.foods.service.OrderService 
 
       order.getItems().add(orderItem);
       totalAmount += food.getPrice() * quantity;
-      
+
       food.setQuantity(food.getQuantity() - quantity);
       foodRepository.save(food);
     }
