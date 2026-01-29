@@ -13,9 +13,13 @@ import com.example.foods.repository.FoodRepository;
 import com.example.foods.repository.OrderRepository;
 import com.example.foods.repository.UserRepository;
 import com.example.foods.service.PaymentService;
+import jakarta.persistence.OptimisticLockException;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.OptimisticLockingFailureException;
+import org.springframework.retry.annotation.Backoff;
+import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -32,21 +36,25 @@ public class OrderServiceImpl implements com.example.foods.service.OrderService 
   private final PaymentService paymentService;
 
   @Override
+  @Retryable(retryFor = {OptimisticLockException.class, OptimisticLockingFailureException.class}, 
+             maxAttempts = 3, 
+             backoff = @Backoff(delay = 100, multiplier = 2))
   public OrderResponseDto createOrder(Long userId, CreateOrderRequestDto orderDto) {
-    log.info("Creating order for user ID: {}", userId);
+    try {
+      log.info("Creating order for user ID: {}", userId);
 
-    User user =
-        userRepository
-            .findById(userId)
-            .orElseThrow(() -> new IllegalArgumentException("User not found with ID: " + userId));
+      User user =
+          userRepository
+              .findById(userId)
+              .orElseThrow(() -> new IllegalArgumentException("User not found with ID: " + userId));
 
-    if (orderDto.getItems() == null || orderDto.getItems().isEmpty()) {
-      throw new IllegalArgumentException("Order must contain at least one item");
-    }
+      if (orderDto.getItems() == null || orderDto.getItems().isEmpty()) {
+        throw new IllegalArgumentException("Order must contain at least one item");
+      }
 
-    Order order = Order.builder().user(user).totalAmount(0.0).status(OrderStatus.PENDING).build();
+      Order order = Order.builder().user(user).totalAmount(0.0).status(OrderStatus.PENDING).build();
 
-    double totalAmount = 0.0;
+      double totalAmount = 0.0;
 
     for (var itemDto : orderDto.getItems()) {
       Food food =
@@ -60,6 +68,12 @@ public class OrderServiceImpl implements com.example.foods.service.OrderService 
       if (quantity == null || quantity < 1) {
         throw new IllegalArgumentException(
             "Quantity must be at least 1 for food ID: " + itemDto.getFoodId());
+      }
+
+      if (!"ACTIVE".equals(food.getStatus())) {
+        throw new IllegalArgumentException(
+            "Food item is not available for order (status: " + food.getStatus() + 
+            ") for food ID: " + itemDto.getFoodId());
       }
 
       if (food.getQuantity() < quantity) {
@@ -83,7 +97,6 @@ public class OrderServiceImpl implements com.example.foods.service.OrderService 
       order.getItems().add(orderItem);
       totalAmount += food.getPrice() * quantity;
 
-      // Decrement food inventory
       food.setQuantity(food.getQuantity() - quantity);
       foodRepository.save(food);
     }
@@ -93,25 +106,36 @@ public class OrderServiceImpl implements com.example.foods.service.OrderService 
 
     log.info("Order created successfully with ID: {}", savedOrder.getId());
     return orderMapper.toDto(savedOrder);
+    } catch (OptimisticLockException | OptimisticLockingFailureException ex) {
+      log.warn("Inventory conflict detected for user {}. Item was modified by another transaction. Retrying...", userId);
+      throw ex;
+    } catch (Exception ex) {
+      log.error("Error creating order for user ID: {}", userId, ex);
+      throw new RuntimeException("Unable to complete your order due to high demand. Please try again.", ex);
+    }
   }
 
   @Override
+  @Retryable(retryFor = {OptimisticLockException.class, OptimisticLockingFailureException.class}, 
+             maxAttempts = 3, 
+             backoff = @Backoff(delay = 100, multiplier = 2))
   public OrderResponseDto createOrderWithPayment(Long userId, CheckoutRequestDto checkoutDto) {
-    log.info(
-        "Creating order with payment for user ID: {}, payment method: {}",
-        userId,
-        checkoutDto.getPaymentMethod());
+    try {
+      log.info(
+          "Creating order with payment for user ID: {}, payment method: {}",
+          userId,
+          checkoutDto.getPaymentMethod());
 
-    User user =
-        userRepository
-            .findById(userId)
-            .orElseThrow(() -> new IllegalArgumentException("User not found with ID: " + userId));
+      User user =
+          userRepository
+              .findById(userId)
+              .orElseThrow(() -> new IllegalArgumentException("User not found with ID: " + userId));
 
-    if (checkoutDto.getItems() == null || checkoutDto.getItems().isEmpty()) {
-      throw new IllegalArgumentException("Order must contain at least one item");
-    }
+      if (checkoutDto.getItems() == null || checkoutDto.getItems().isEmpty()) {
+        throw new IllegalArgumentException("Order must contain at least one item");
+      }
 
-    // Create order with payment info
+   
     Order order =
         Order.builder()
             .user(user)
@@ -124,7 +148,7 @@ public class OrderServiceImpl implements com.example.foods.service.OrderService 
 
     double totalAmount = 0.0;
 
-    // Add order items
+   
     for (var itemDto : checkoutDto.getItems()) {
       Food food =
           foodRepository
@@ -175,7 +199,6 @@ public class OrderServiceImpl implements com.example.foods.service.OrderService 
 
     order.setTotalAmount(totalAmount);
 
-    // Handle payment confirmation for card payments
     if ("card".equals(checkoutDto.getPaymentMethod()) && checkoutDto.getPaymentIntentId() != null) {
       boolean paymentConfirmed = paymentService.confirmPayment(checkoutDto.getPaymentIntentId());
 
@@ -190,7 +213,7 @@ public class OrderServiceImpl implements com.example.foods.service.OrderService 
         throw new RuntimeException("Payment failed. Please try again.");
       }
     } else if ("cash".equals(checkoutDto.getPaymentMethod())) {
-      order.setPaymentStatus("pending"); // Will be completed on delivery
+      order.setPaymentStatus("pending");
       log.info("Cash on delivery order created");
     }
 
@@ -201,6 +224,19 @@ public class OrderServiceImpl implements com.example.foods.service.OrderService 
         savedOrder.getPaymentMethod());
 
     return orderMapper.toDto(savedOrder);
+    } catch (OptimisticLockException | OptimisticLockingFailureException ex) {
+      log.warn("Inventory conflict detected during checkout for user {}. Item was modified by another transaction. Retrying...", userId);
+      throw ex;
+    } catch (RuntimeException ex) {
+      if (ex.getMessage().contains("Payment failed")) {
+        throw ex;
+      }
+      log.error("Error creating order with payment for user ID: {}", userId, ex);
+      throw new RuntimeException("Unable to complete your order due to high demand. Please try again.", ex);
+    } catch (Exception ex) {
+      log.error("Unexpected error creating order with payment for user ID: {}", userId, ex);
+      throw new RuntimeException("Unable to process your order at this time. Please try again later.", ex);
+    }
   }
 
   @Override
