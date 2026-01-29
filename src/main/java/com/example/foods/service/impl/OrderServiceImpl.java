@@ -71,10 +71,6 @@ public class OrderServiceImpl implements com.example.foods.service.OrderService 
               "Quantity must be at least 1 for food ID: " + itemDto.getFoodId());
         }
 
-        if (food.getVersion() == null) {
-          throw new IllegalStateException("Food version is null for food ID: " + food.getId());
-        }
-
         if (!"ACTIVE".equals(food.getStatus())) {
           throw new IllegalArgumentException(
               "Food item is not available for order (status: "
@@ -87,7 +83,6 @@ public class OrderServiceImpl implements com.example.foods.service.OrderService 
         if (currentQuantity == null) {
           currentQuantity = 0;
         }
-        
         if (currentQuantity < quantity) {
           throw new IllegalArgumentException(
               "Insufficient stock for food ID: "
@@ -190,7 +185,7 @@ public class OrderServiceImpl implements com.example.foods.service.OrderService 
         if (currentQuantity == null) {
           currentQuantity = 0;
         }
-        
+
         if (currentQuantity < quantity) {
           throw new IllegalArgumentException(
               "Insufficient stock for food ID: "

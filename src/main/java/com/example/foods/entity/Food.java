@@ -41,8 +41,7 @@ public class Food {
   @Builder.Default
   private String status = "ACTIVE";
 
-  @Builder.Default
-  @Version private Long version = 1L;
+  @Version private Long version;
 
   @OneToMany(mappedBy = "food", cascade = CascadeType.ALL, orphanRemoval = true)
   @Builder.Default
