@@ -13,10 +13,41 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
 
   List<Order> findByUserIdAndStatusOrderByCreatedAtDesc(Long userId, String status);
 
-  @Query(
-      "SELECT o FROM Order o WHERE o.user.id = :userId AND o.status = :status ORDER BY o.createdAt DESC")
   List<Order> findAllByOrderByCreatedAtDesc();
 
-  @Query("SELECT o FROM Order o WHERE o.status = :status ORDER BY o.createdAt DESC")
   List<Order> findByStatusOrderByCreatedAtDesc(OrderStatus status);
+
+  @Query(
+      "SELECT DISTINCT o FROM Order o "
+          + "LEFT JOIN FETCH o.user "
+          + "LEFT JOIN FETCH o.items i "
+          + "LEFT JOIN FETCH i.food "
+          + "ORDER BY o.createdAt DESC")
+  List<Order> findAllWithDetailsOrderByCreatedAtDesc();
+
+  @Query(
+      "SELECT DISTINCT o FROM Order o "
+          + "LEFT JOIN FETCH o.user "
+          + "LEFT JOIN FETCH o.items i "
+          + "LEFT JOIN FETCH i.food "
+          + "WHERE o.status = :status "
+          + "ORDER BY o.createdAt DESC")
+  List<Order> findByStatusWithDetailsOrderByCreatedAtDesc(OrderStatus status);
+
+  @Query(
+      "SELECT DISTINCT o FROM Order o "
+          + "LEFT JOIN FETCH o.user "
+          + "LEFT JOIN FETCH o.items i "
+          + "LEFT JOIN FETCH i.food "
+          + "WHERE o.user.id = :userId "
+          + "ORDER BY o.createdAt DESC")
+  List<Order> findByUserIdWithDetailsOrderByCreatedAtDesc(Long userId);
+
+  @Query(
+      "SELECT o FROM Order o "
+          + "LEFT JOIN FETCH o.user "
+          + "LEFT JOIN FETCH o.items i "
+          + "LEFT JOIN FETCH i.food "
+          + "WHERE o.id = :orderId")
+  Order findByIdWithDetails(Long orderId);
 }

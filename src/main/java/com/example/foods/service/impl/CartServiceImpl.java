@@ -9,6 +9,7 @@ import com.example.foods.mapper.CartMapper;
 import com.example.foods.repository.CartRepository;
 import com.example.foods.repository.FoodRepository;
 import com.example.foods.repository.UserRepository;
+import com.example.foods.service.CartService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -18,7 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 @Slf4j
 @Transactional
-public class CartServiceImpl implements com.example.foods.service.CartService {
+public class CartServiceImpl implements CartService {
 
   private final CartRepository cartRepository;
   private final UserRepository userRepository;
