@@ -12,11 +12,14 @@ import com.example.foods.mapper.OrderMapper;
 import com.example.foods.repository.FoodRepository;
 import com.example.foods.repository.OrderRepository;
 import com.example.foods.repository.UserRepository;
+import com.example.foods.service.MailService;
 import com.example.foods.service.PaymentService;
 import jakarta.persistence.OptimisticLockException;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.retry.annotation.Backoff;
 import org.springframework.retry.annotation.Retryable;
@@ -34,6 +37,11 @@ public class OrderServiceImpl implements com.example.foods.service.OrderService 
   private final FoodRepository foodRepository;
   private final OrderMapper orderMapper;
   private final PaymentService paymentService;
+  private final MailService mailService;
+
+
+  @Value("${spring.application.base-url}")
+  private final String appBaseUrl;;
 
   @Override
   @Retryable(
@@ -113,6 +121,16 @@ public class OrderServiceImpl implements com.example.foods.service.OrderService 
       Order savedOrder = orderRepository.save(order);
 
       log.info("Order created successfully with ID: {}", savedOrder.getId());
+      mailService.sendSimpleMail(
+          "A new order has been placed",
+          "Order ID: "
+              + savedOrder.getId()
+              + " has been placed by user: "
+              + user.getUsername()
+              + ". Total amount: $"
+              + totalAmount
+              + ". Check at URL: "
+              + appBaseUrl + "/admin/orders/" + savedOrder.getId());
       return orderMapper.toDto(savedOrder);
     } catch (OptimisticLockException | OptimisticLockingFailureException ex) {
       log.warn(
@@ -239,6 +257,14 @@ public class OrderServiceImpl implements com.example.foods.service.OrderService 
           savedOrder.getId(),
           savedOrder.getPaymentMethod());
 
+      mailService.sendSimpleMail(
+          "A new order has been placed",
+          "Order ID: "
+              + savedOrder.getId()
+              + " has been placed by user: "
+              + user.getUsername()
+              + ". Total amount: $"
+              + totalAmount);
       return orderMapper.toDto(savedOrder);
     } catch (OptimisticLockException | OptimisticLockingFailureException ex) {
       log.warn(
