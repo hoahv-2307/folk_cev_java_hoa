@@ -17,7 +17,7 @@ public class MailServiceImpl implements MailService {
   private final JavaMailSender mailSender;
 
   @Value("${spring.mail.username}")
-  private String adminEmail;
+  private final String adminEmail;
 
   @Override
   @Async
