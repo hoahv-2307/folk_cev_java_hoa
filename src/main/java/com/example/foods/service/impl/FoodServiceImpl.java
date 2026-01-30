@@ -7,6 +7,8 @@ import com.example.foods.mapper.FoodMapper;
 import com.example.foods.repository.FoodRepository;
 import com.example.foods.service.FileStorageService;
 import com.example.foods.service.FoodService;
+import com.example.foods.service.RatingService;
+
 import java.util.ArrayList;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -23,6 +25,7 @@ public class FoodServiceImpl implements FoodService {
   private final FoodRepository foodRepository;
   private final FoodMapper foodMapper;
   private final FileStorageService fileStorageService;
+  private final RatingService ratingService;
 
   @Override
   public FoodResponseDto createFood(FoodRequestDto foodDto) {
@@ -51,7 +54,10 @@ public class FoodServiceImpl implements FoodService {
       Food savedFood = foodRepository.save(food);
 
       log.info("Successfully created food with ID: {}", savedFood.getId());
-      return foodMapper.toDto(savedFood);
+      FoodResponseDto dto = foodMapper.toDto(savedFood);
+      dto.setAverageRating(ratingService.getAverageRating(savedFood.getId()));
+      dto.setRatingCount(ratingService.getRatingCount(savedFood.getId()));
+      return dto;
     } catch (Exception e) {
       log.error("Failed to create food, cleaning up uploaded files: {}", uploadedFileKeys);
       cleanupUploadedFiles(uploadedFileKeys);
@@ -64,7 +70,13 @@ public class FoodServiceImpl implements FoodService {
   public List<FoodResponseDto> getAllFoods() {
     log.info("Retrieving all foods");
     List<Food> foods = foodRepository.findAll();
-    return foodMapper.toDtoList(foods);
+    List<FoodResponseDto> dtos = foodMapper.toDtoList(foods);
+    dtos.forEach(
+        d -> {
+          d.setAverageRating(ratingService.getAverageRating(d.getId()));
+          d.setRatingCount(ratingService.getRatingCount(d.getId()));
+        });
+    return dtos;
   }
 
   @Override
@@ -75,7 +87,10 @@ public class FoodServiceImpl implements FoodService {
         foodRepository
             .findById(id)
             .orElseThrow(() -> new IllegalArgumentException("Food not found with ID: " + id));
-    return foodMapper.toDto(food);
+    FoodResponseDto dto = foodMapper.toDto(food);
+    dto.setAverageRating(ratingService.getAverageRating(id));
+    dto.setRatingCount(ratingService.getRatingCount(id));
+    return dto;
   }
 
   @Override
@@ -143,7 +158,13 @@ public class FoodServiceImpl implements FoodService {
   public List<FoodResponseDto> getFoodsByCategory(String category) {
     log.info("Retrieving foods by category: {}", category);
     List<Food> foods = foodRepository.findByCategory(category);
-    return foodMapper.toDtoList(foods);
+    List<FoodResponseDto> dtos = foodMapper.toDtoList(foods);
+    dtos.forEach(
+        d -> {
+          d.setAverageRating(ratingService.getAverageRating(d.getId()));
+          d.setRatingCount(ratingService.getRatingCount(d.getId()));
+        });
+    return dtos;
   }
 
   @Override
@@ -151,7 +172,13 @@ public class FoodServiceImpl implements FoodService {
   public List<FoodResponseDto> searchFoodsByName(String name) {
     log.info("Searching foods by name: {}", name);
     List<Food> foods = foodRepository.findByNameContainingIgnoreCase(name);
-    return foodMapper.toDtoList(foods);
+    List<FoodResponseDto> dtos = foodMapper.toDtoList(foods);
+    dtos.forEach(
+        d -> {
+          d.setAverageRating(ratingService.getAverageRating(d.getId()));
+          d.setRatingCount(ratingService.getRatingCount(d.getId()));
+        });
+    return dtos;
   }
 
   @Override
@@ -164,7 +191,13 @@ public class FoodServiceImpl implements FoodService {
     }
 
     List<Food> foods = foodRepository.findByPriceBetween(minPrice, maxPrice);
-    return foodMapper.toDtoList(foods);
+    List<FoodResponseDto> dtos = foodMapper.toDtoList(foods);
+    dtos.forEach(
+        d -> {
+          d.setAverageRating(ratingService.getAverageRating(d.getId()));
+          d.setRatingCount(ratingService.getRatingCount(d.getId()));
+        });
+    return dtos;
   }
 
   private void cleanupUploadedFiles(List<String> fileKeys) {

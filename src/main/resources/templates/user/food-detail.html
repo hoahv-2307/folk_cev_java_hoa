@@ -62,6 +62,56 @@
                         <p>This delicious item is waiting for photos!</p>
                     </div>
                 </div>
+
+                <!-- Food Details Card (moved here from right column) -->
+                <div class="card border-0 bg-light mt-4">
+                    <div class="card-header bg-transparent border-0 pb-0">
+                        <h6 class="text-uppercase text-muted mb-0 fw-semibold">
+                            <i class="fas fa-list me-1"></i>Details
+                        </h6>
+                    </div>
+                    <div class="card-body pt-2">
+                        <div class="row g-3">
+                            <div class="col-6">
+                                <div class="detail-item">
+                                    <small class="text-muted d-block">Category</small>
+                                    <span class="fw-medium" th:text="${food.category}">Category</span>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="detail-item">
+                                    <small class="text-muted d-block">Price</small>
+                                    <span class="fw-medium text-success">
+                                        $<span th:text="${#numbers.formatDecimal(food.price, 1, 2)}">0.00</span>
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="detail-item">
+                                    <small class="text-muted d-block">Stock</small>
+                                    <span class="fw-medium" 
+                                          th:class="${food.quantity > 10} ? 'text-success' : (${food.quantity > 0} ? 'text-warning' : 'text-danger')"
+                                          th:text="${food.quantity} + ' available'">0 available</span>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="detail-item">
+                                    <small class="text-muted d-block">Added On</small>
+                                    <span class="fw-medium" th:text="${#temporals.format(food.createdAt, 'MMM dd, yyyy')}">Date</span>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="detail-item">
+                                    <small class="text-muted d-block">Images</small>
+                                    <span class="fw-medium">
+                                        <span th:text="${#lists.size(food.foodImages)}">0</span> 
+                                        <span th:text="${#lists.size(food.foodImages) == 1} ? 'photo' : 'photos'">photos</span>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <!-- Food Information -->
@@ -140,56 +190,36 @@
                             </button>
                         </div>
                     </div>
-                    
-                    <!-- Food Details Card -->
-                    <div class="card border-0 bg-light">
-                        <div class="card-header bg-transparent border-0 pb-0">
-                            <h6 class="text-uppercase text-muted mb-0 fw-semibold">
-                                <i class="fas fa-list me-1"></i>Details
-                            </h6>
+
+                    <!-- Rating Section -->
+                    <div class="rating-section mb-4">
+                        <h6 class="mb-2">Rating</h6>
+                        <div class="d-flex align-items-center mb-2">
+                            <div class="me-2">
+                                <strong class="h5 text-success" id="avgRating" th:text="${#numbers.formatDecimal(food.averageRating, 1, 1)}">0.0</strong>
+                                <i class="fas fa-star text-warning"></i>
+                            </div>
+                            <div class="text-muted small">(<span id="ratingCount" th:text="${food.ratingCount}">0</span> ratings)</div>
                         </div>
-                        <div class="card-body pt-2">
-                            <div class="row g-3">
-                                <div class="col-6">
-                                    <div class="detail-item">
-                                        <small class="text-muted d-block">Category</small>
-                                        <span class="fw-medium" th:text="${food.category}">Category</span>
-                                    </div>
-                                </div>
-                                <div class="col-6">
-                                    <div class="detail-item">
-                                        <small class="text-muted d-block">Price</small>
-                                        <span class="fw-medium text-success">
-                                            $<span th:text="${#numbers.formatDecimal(food.price, 1, 2)}">0.00</span>
-                                        </span>
-                                    </div>
-                                </div>
-                                <div class="col-6">
-                                    <div class="detail-item">
-                                        <small class="text-muted d-block">Stock</small>
-                                        <span class="fw-medium" 
-                                              th:class="${food.quantity > 10} ? 'text-success' : (${food.quantity > 0} ? 'text-warning' : 'text-danger')"
-                                              th:text="${food.quantity} + ' available'">0 available</span>
-                                    </div>
-                                </div>
-                                <div class="col-6">
-                                    <div class="detail-item">
-                                        <small class="text-muted d-block">Added On</small>
-                                        <span class="fw-medium" th:text="${#temporals.format(food.createdAt, 'MMM dd, yyyy')}">Date</span>
-                                    </div>
-                                </div>
-                                <div class="col-6">
-                                    <div class="detail-item">
-                                        <small class="text-muted d-block">Images</small>
-                                        <span class="fw-medium">
-                                            <span th:text="${#lists.size(food.foodImages)}">0</span> 
-                                            <span th:text="${#lists.size(food.foodImages) == 1} ? 'photo' : 'photos'">photos</span>
-                                        </span>
-                                    </div>
-                                </div>
+
+                        <div id="ratingFormContainer">
+                            <label class="d-block mb-1">Your rating</label>
+                            <div id="starPicker" class="mb-2">
+                                <button class="btn btn-sm btn-outline-secondary star-btn" data-value="1" aria-label="Rate 1 star"><i class="fas fa-star"></i></button>
+                                <button class="btn btn-sm btn-outline-secondary star-btn" data-value="2" aria-label="Rate 2 stars"><i class="fas fa-star"></i></button>
+                                <button class="btn btn-sm btn-outline-secondary star-btn" data-value="3" aria-label="Rate 3 stars"><i class="fas fa-star"></i></button>
+                                <button class="btn btn-sm btn-outline-secondary star-btn" data-value="4" aria-label="Rate 4 stars"><i class="fas fa-star"></i></button>
+                                <button class="btn btn-sm btn-outline-secondary star-btn" data-value="5" aria-label="Rate 5 stars"><i class="fas fa-star"></i></button>
+                            </div>
+                            <textarea id="ratingComment" class="form-control mb-2" placeholder="Optional comment" rows="2"></textarea>
+                            <div>
+                                <button id="submitRatingBtn" class="btn btn-primary btn-sm" th:attr="data-food-id=${food.id}">Submit Rating</button>
+                                <small class="text-muted ms-2" id="ratingMsg" style="display:none"></small>
                             </div>
                         </div>
                     </div>
+                    
+                    
                 </div>
             </div>
         </div>
@@ -218,7 +248,93 @@
     <div th:replace="~{fragments/common/common-script :: common-script}"></div>
 
     <!-- Custom JavaScript for Image Gallery -->
-    <script>
+                    <script th:inline="javascript">
+        // Rating widget
+    (function(){
+            let selectedScore = 0;
+            const starBtns = document.querySelectorAll('.star-btn');
+            const submitBtn = document.getElementById('submitRatingBtn');
+            const msgEl = document.getElementById('ratingMsg');
+            const avgEl = document.getElementById('avgRating');
+            const countEl = document.getElementById('ratingCount');
+            const commentEl = document.getElementById('ratingComment');
+            const foodId = submitBtn?.dataset?.foodId || '0';
+
+            // Prefill user's existing rating (if authenticated)
+            (async function loadMyRating(){
+                try{
+                    const resp = await fetch(`/api/foods/${foodId}/ratings/me`, { credentials: 'same-origin' });
+                    if(resp.status === 200){
+                        const data = await resp.json();
+                        if(data && data.score){
+                            selectedScore = data.score;
+                            setActiveStars(selectedScore);
+                            if(commentEl) commentEl.value = data.comment || '';
+                            if(submitBtn) submitBtn.textContent = 'Update Rating';
+                        }
+                    }
+                }catch(e){
+                    // ignore - unauthenticated or network error
+                }
+            })();
+
+            function setActiveStars(score){
+                starBtns.forEach(b=>{
+                    const v = parseInt(b.dataset.value,10);
+                    if(v <= score){
+                        b.classList.remove('btn-outline-secondary'); b.classList.add('btn-warning');
+                    } else { b.classList.remove('btn-warning'); b.classList.add('btn-outline-secondary'); }
+                });
+            }
+
+            starBtns.forEach(btn => {
+                btn.addEventListener('click', function(e){
+                    e.preventDefault();
+                    selectedScore = parseInt(this.dataset.value,10);
+                    setActiveStars(selectedScore);
+                });
+            });
+
+            if(submitBtn){
+                submitBtn.addEventListener('click', async function(){
+                    if(selectedScore <= 0){
+                        msgEl.style.display='inline'; msgEl.textContent='Please select a rating (1-5)'; msgEl.className='text-danger ms-2';
+                        return;
+                    }
+                    const comment = document.getElementById('ratingComment').value;
+                    const foodId = submitBtn.dataset.foodId || '0';
+                    try{
+                        msgEl.style.display='inline'; msgEl.textContent='Saving...'; msgEl.className='text-muted ms-2';
+                        const res = await fetch(`/api/foods/${foodId}/ratings`, {
+                            method: 'POST',
+                            headers: {
+                                "X-CSRF-TOKEN": document.querySelector('meta[name="_csrf"]')?.getAttribute('content') || 
+                                                 document.querySelector('input[name="_csrf"]')?.value || '',
+                                'Content-Type': 'application/json' },
+                            credentials: 'same-origin',
+                            body: JSON.stringify({ score: selectedScore, comment })
+                        });
+                        if(res.status === 201){
+                            msgEl.textContent='Thanks for your rating!'; msgEl.className='text-success ms-2';
+                            // refresh rating display
+                            const resp = await fetch(`/api/foods/${foodId}`, { credentials: 'same-origin' });
+                            if(resp.ok){
+                                const data = await resp.json();
+                                avgEl.textContent = (Math.round((data.averageRating||0)*10)/10).toFixed(1);
+                                countEl.textContent = data.ratingCount || 0;
+                            }
+                        } else if(res.status === 401){
+                            msgEl.textContent='Please login to submit a rating.'; msgEl.className='text-danger ms-2';
+                        } else {
+                            const txt = await res.text();
+                            msgEl.textContent='Failed: '+(txt || res.statusText); msgEl.className='text-danger ms-2';
+                        }
+                    } catch(err){
+                        msgEl.textContent='Error saving rating'; msgEl.className='text-danger ms-2';
+                    }
+                });
+            }
+        })();
         function changeMainImage(newSrc) {
             const mainImage = document.getElementById('mainImage');
             if (mainImage) {
@@ -280,6 +396,28 @@
             transform: scale(1.02);
             transition: all 0.2s ease;
         }
+
+        /* Rating star styles */
+        .star-btn {
+            width: 40px;
+            height: 36px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 6px;
+            margin-right: 6px;
+            padding: 0.25rem 0.45rem;
+        }
+        .star-btn .fa-star {
+            font-size: 1rem;
+        }
+        .star-btn.btn-outline-secondary .fa-star {
+            color: #6c757d;
+        }
+        .star-btn.btn-warning .fa-star {
+            color: #fff;
+        }
+        .star-btn:hover { transform: scale(1.05); }
         
         .main-image-container {
             position: relative;
