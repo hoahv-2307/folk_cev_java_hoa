@@ -117,9 +117,38 @@
             <!-- Food Information -->
             <div class="col-lg-5">
                 <div class="food-info sticky-top" style="top: 2rem;">
-                    <!-- Category Badge -->
-                    <div class="mb-3">
+                    <!-- Category Badge + Favorite + Share -->
+                    <div class="mb-3 d-flex align-items-center justify-content-between">
                         <span class="badge bg-primary fs-6 px-3 py-2" th:text="${food.category}">Category</span>
+
+                        <div class="d-flex align-items-center gap-2">
+                            <button class="btn btn-outline-danger btn-sm" th:data-id="${food.id}" onclick="toggleFavorite(this)" title="Add to favorites">
+                                <i class="fas fa-heart"></i>
+                            </button>
+
+                            <div class="btn-group">
+                                <button type="button" class="btn btn-outline-secondary btn-sm dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false" title="Share" aria-label="Share this food">
+                                    <i class="fas fa-share-alt"></i>
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-end">
+                                    <li>
+                                        <button class="dropdown-item sharer-btn" data-sharer="facebook" data-url="" data-title="" id="shareFb">Share on Facebook</button>
+                                    </li>
+                                    <li>
+                                        <button class="dropdown-item sharer-btn" data-sharer="twitter" data-url="" data-title="" id="shareTw">Share on Twitter</button>
+                                    </li>
+                                    <li>
+                                        <button class="dropdown-item" id="shareInstagram">Share to Instagram (copy link)</button>
+                                    </li>
+                                    <li>
+                                        <button class="dropdown-item sharer-btn" data-sharer="whatsapp" data-url="" id="shareWa">Share via WhatsApp</button>
+                                    </li>
+                                    <li>
+                                        <button class="dropdown-item" id="shareCopy">Copy Link</button>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
                     </div>
                     
                     <!-- Food Name -->
@@ -183,11 +212,7 @@
                                 <span th:if="${food.quantity == 0 and food.status == 'ACTIVE'}">Out of Stock</span>
                                 <span th:if="${food.quantity > 0 and food.status == 'ACTIVE'}">Add to Cart</span>
                             </button>
-                            <button class="btn btn-outline-danger btn-lg" 
-                                    th:data-id="${food.id}"
-                                    onclick="toggleFavorite(this)">
-                                <i class="fas fa-heart me-2"></i>Add to Favorites
-                            </button>
+                            
                         </div>
                     </div>
 
@@ -379,8 +404,53 @@
                     return new bootstrap.Tooltip(tooltipTriggerEl);
                 });
             }
+            try {
+                const origin = window.location.origin;
+                const path = window.location.pathname;
+                const url = origin + path;
+                const title = document.querySelector('h1.display-6')?.textContent?.trim() || document.title || '';
+
+                document.querySelectorAll('.sharer-btn').forEach(btn => {
+                    btn.setAttribute('data-url', url);
+                    if (title) btn.setAttribute('data-title', title);
+                });
+
+                const copyBtn = document.getElementById('shareCopy');
+                if (copyBtn) {
+                    copyBtn.addEventListener('click', async function () {
+                        try {
+                            await navigator.clipboard.writeText(url);
+                            alert('Link copied to clipboard');
+                        } catch (e) {
+                            prompt('Copy this link:', url);
+                        }
+                    });
+                }
+                const igBtn = document.getElementById('shareInstagram');
+                if (igBtn) {
+                    igBtn.addEventListener('click', async function () {
+                        if (navigator.share) {
+                            try {
+                                await navigator.share({ title: title, text: title, url: url });
+                                return;
+                            } catch (e) {
+                                showToast('Failed to share via Instagram app, copying link instead');
+                            }
+                        }
+                        try {
+                            await navigator.clipboard.writeText(url);
+                            showToast('Link copied — paste into Instagram');
+                        } catch (e) {
+                            prompt('Copy this link to share on Instagram:', url);
+                        }
+                    });
+                }
+            } catch (e) {
+            }
         });
     </script>
+
+    <script src="https://unpkg.com/sharer.js@0.4.0/sharer.min.js"></script>
 
     <!-- Custom Styles -->
     <style>
