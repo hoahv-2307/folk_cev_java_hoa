@@ -5,15 +5,20 @@ import com.example.foods.dto.request.CheckoutRequestDto;
 import com.example.foods.dto.request.OrderItemRequestDto;
 import com.example.foods.dto.request.UserRequestDto;
 import com.example.foods.dto.response.UserResponseDto;
+import com.example.foods.entity.FoodSuggestion;
+import com.example.foods.repository.FoodSuggestionRepository;
 import com.example.foods.service.CartService;
 import com.example.foods.service.FoodService;
 import com.example.foods.service.OrderService;
-import com.example.foods.service.PaymentService;
 import com.example.foods.service.UserService;
 import jakarta.validation.Valid;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.security.Principal;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
@@ -32,7 +37,7 @@ public class WebController {
   private final UserService userService;
   private final OrderService orderService;
   private final CartService cartService;
-  private final PaymentService paymentService;
+  private final FoodSuggestionRepository foodSuggestionRepository;
 
   @GetMapping("/")
   public String home() {
@@ -251,6 +256,35 @@ public class WebController {
     model.addAttribute("orderStatuses", OrderStatus.values());
     model.addAttribute("currentStatus", status);
     return "admin/orders";
+  }
+
+  @GetMapping("/admin/suggestions")
+  public String showAdminFoodSuggestions(Model model) {
+    List<FoodSuggestion> suggestions = foodSuggestionRepository.findAll();
+    List<Map<String, Object>> views = new ArrayList<>();
+    for (FoodSuggestion s : suggestions) {
+      Map<String, Object> m = new HashMap<>();
+      m.put("id", s.getId());
+      m.put("userId", s.getUserId());
+      String username = "Unknown";
+      try {
+        var u = userService.getUserById(s.getUserId());
+        if (u != null) username = u.getUsername();
+      } catch (Exception ignored) {
+      }
+      m.put("username", username);
+      m.put("name", s.getName());
+      m.put("category", s.getCategory());
+      m.put("price", s.getPrice());
+      m.put("imageUrl", s.getImageUrl());
+      m.put("status", s.getStatus());
+      m.put("adminNote", s.getAdminNote());
+      m.put("createdAt", s.getCreatedAt());
+      views.add(m);
+    }
+
+    model.addAttribute("suggestions", views);
+    return "admin/food-suggestions";
   }
 
   @GetMapping("/admin/orders/{id}")

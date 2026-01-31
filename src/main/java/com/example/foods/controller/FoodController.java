@@ -4,7 +4,11 @@ import com.example.foods.dto.request.FoodRequestDto;
 import com.example.foods.dto.response.FoodResponseDto;
 import com.example.foods.service.FileStorageService;
 import com.example.foods.service.FoodService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -13,6 +17,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.HandlerMapping;
 
 @RestController
 @RequestMapping("/api/foods")
@@ -82,10 +87,19 @@ public class FoodController {
     return ResponseEntity.ok(foods);
   }
 
-  @GetMapping("/images/{filename}")
-  public ResponseEntity<byte[]> getImage(@PathVariable String filename) {
-    log.info("REST request to get image: {}", filename);
-    byte[] imageBytes = fileStorageService.downloadFile(filename);
+  @GetMapping("/images/**")
+  public ResponseEntity<byte[]> getImage(HttpServletRequest request) {
+    String path =
+        (String) request.getAttribute(HandlerMapping.PATH_WITHIN_HANDLER_MAPPING_ATTRIBUTE);
+    String key = path.replaceFirst("/api/foods/images/", "");
+    log.info("REST request to get image: {}", key);
+    String decodedKey;
+    try {
+      decodedKey = URLDecoder.decode(key, StandardCharsets.UTF_8.name());
+    } catch (UnsupportedEncodingException e) {
+      decodedKey = key;
+    }
+    byte[] imageBytes = fileStorageService.downloadFile(decodedKey);
     HttpHeaders headers = new HttpHeaders();
     headers.setContentType(MediaType.IMAGE_JPEG);
     return ResponseEntity.ok().headers(headers).body(imageBytes);

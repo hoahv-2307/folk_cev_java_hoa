@@ -9,6 +9,13 @@
     <!-- Navigation -->
     <div th:replace="~{fragments/user/user-header :: user-header}"></div>
 
+    <!-- Suggestion button -->
+    <div class="container mt-3 text-end">
+        <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#addSuggestionModal">
+            <i class="fas fa-lightbulb me-1"></i>Suggest a Food
+        </button>
+    </div>
+
     <!-- Search and Filter Section -->
     <div th:replace="~{fragments/user/user-search :: user-search}"></div>
 
@@ -106,5 +113,6 @@
     <div th:replace="~{fragments/common/common-libs-script :: common-libs-script}"></div>
     <div th:replace="~{fragments/user/user-scripts :: user-scripts}"></div>
     <div th:replace="~{fragments/common/common-script :: common-script}"></div>
+    <div th:replace="~{fragments/user/user-add-suggestion :: add-suggestion-modal}"></div>
 </body>
 </html>

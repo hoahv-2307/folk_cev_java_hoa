@@ -16,12 +16,15 @@ import org.mapstruct.NullValuePropertyMappingStrategy;
     nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
 public interface FoodMapper {
 
+  @Mapping(target = "averageRating", ignore = true)
+  @Mapping(target = "ratingCount", ignore = true)
   FoodResponseDto toDto(Food food);
 
   @Mapping(target = "id", ignore = true)
   @Mapping(target = "createdAt", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
   @Mapping(target = "foodImages", ignore = true)
+  @Mapping(target = "version", ignore = true)
   Food toEntity(FoodRequestDto foodDto);
 
   List<FoodResponseDto> toDtoList(List<Food> foods);

@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/common/common-libs-script :: common-head('Food Suggestions - Admin')}"></head>
+<head th:replace="~{fragments/admin/admin-header :: admin-styles}"></head>
+<body>
+  <div th:replace="~{fragments/admin/admin-header :: admin-header}"></div>
+
+  <div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h3 class="mb-0">Food Suggestions</h3>
+      <div>
+        <a class="btn btn-outline-secondary me-2" th:href="@{/admin/foods}">
+          <i class="fas fa-arrow-left me-1"></i>Back to Foods
+        </a>
+        <a class="btn btn-primary" th:href="@{/admin/food-suggestions}">
+          <i class="fas fa-refresh me-1"></i>Refresh
+        </a>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-body">
+        <div class="mb-3 row">
+          <div class="col-md-6">
+            <input class="form-control" id="suggestionSearch" placeholder="Search by name or category" />
+          </div>
+          <div class="col-md-6 text-end text-muted">
+            <small th:text="${suggestions.size()} + ' suggestion(s)'"></small>
+          </div>
+        </div>
+
+        <div class="table-responsive">
+          <table class="table table-sm table-hover align-middle">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Submitter</th>
+            <th>Name</th>
+            <th>Category</th>
+            <th>Price</th>
+            <th>Image</th>
+            <th>Status</th>
+            <th>Admin Note</th>
+            <th>Created</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr th:each="s : ${suggestions}">
+            <td th:text="${s.id}"></td>
+            <td>
+              <div class="fw-semibold" th:text="${s.username}"></div>
+              <div class="text-muted small" th:text="${s.userId}"></div>
+            </td>
+            <td>
+              <div class="fw-semibold" th:text="${s.name}"></div>
+            </td>
+            <td th:text="${s.category}"></td>
+            <td class="text-end" th:text="${s.price}"></td>
+            <td>
+              <a th:if="${s.imageUrl != null}" th:href="@{/api/foods/images/{filename}(filename=${s.imageUrl})}" target="_blank">
+                <img th:src="@{/api/foods/images/{filename}(filename=${s.imageUrl})}" class="img-thumbnail" style="height:60px; width:60px; object-fit:cover" />
+              </a>
+            </td>
+            <td>
+              <span class="badge"
+                th:classappend="${s.status == 'PENDING'} ? ' bg-warning text-dark' : (${s.status == 'APPROVED'} ? ' bg-success' : ' bg-danger')"
+                th:text="${s.status}"></span>
+            </td>
+            <td><small th:text="${s.adminNote}"></small></td>
+            <td><small class="text-muted" th:text="${#temporals.format(s.createdAt, 'yyyy-MM-dd HH:mm')}"></small></td>
+            <td>
+              <div class="d-flex flex-column">
+                <form th:if="${s.status != 'APPROVED'}" th:action="@{'/admin/food-suggestions/' + ${s.id} + '/process'}" method="post">
+                  <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                  <input type="hidden" name="status" value="APPROVE" />
+                  <div class="input-group input-group-sm mb-1">
+                    <input type="text" name="adminNote" class="form-control" placeholder="Note (optional)" />
+                    <button class="btn btn-success" type="submit">Approve</button>
+                  </div>
+                </form>
+                <form th:if="${s.status != 'REJECTED'}" th:action="@{'/admin/food-suggestions/' + ${s.id} + '/process'}" method="post">
+                  <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                  <input type="hidden" name="status" value="REJECT" />
+                  <div class="input-group input-group-sm">
+                    <input type="text" name="adminNote" class="form-control" placeholder="Note (optional)" />
+                    <button class="btn btn-danger" type="submit">Reject</button>
+                  </div>
+                </form>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <script>
+  document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('form').forEach(form => {
+      if (!form.action.includes('/admin/food-suggestions/') || !form.action.endsWith('/process')) return;
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const submitBtn = form.querySelector('button[type="submit"]');
+        submitBtn.disabled = true;
+        try {
+          const res = await fetch(form.action, { method: 'POST', body: new FormData(form), credentials: 'same-origin' });
+          if (!res.ok) {
+            const text = await res.text();
+            showToast(text || res.statusText, 'danger');
+            submitBtn.disabled = false;
+            return;
+          }
+          showToast('Operation successful');
+          setTimeout(() => location.reload(), 800);
+        } catch (err) {
+          showToast('Network error', 'danger');
+          submitBtn.disabled = false;
+        }
+      });
+    });
+  });
+  </script>
+
+  <!-- Toast Container -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <div th:replace="~{fragments/common/common-libs-script :: common-libs-script}"></div>
+  <div th:replace="~{fragments/common/common-script :: common-script}"></div>
+</body>
+</html>
