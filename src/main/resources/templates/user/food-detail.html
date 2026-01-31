@@ -183,11 +183,29 @@
                                 <span th:if="${food.quantity == 0 and food.status == 'ACTIVE'}">Out of Stock</span>
                                 <span th:if="${food.quantity > 0 and food.status == 'ACTIVE'}">Add to Cart</span>
                             </button>
-                            <button class="btn btn-outline-danger btn-lg" 
-                                    th:data-id="${food.id}"
-                                    onclick="toggleFavorite(this)">
-                                <i class="fas fa-heart me-2"></i>Add to Favorites
-                            </button>
+                            <div class="d-flex gap-2">
+                                <button class="btn btn-outline-danger btn-lg" 
+                                        th:data-id="${food.id}"
+                                        onclick="toggleFavorite(this)">
+                                    <i class="fas fa-heart me-2"></i>Add to Favorites
+                                </button>
+
+                                <!-- Share Buttons -->
+                                <div class="btn-group" role="group" aria-label="Share">
+                                    <button class="btn btn-outline-primary btn-lg" id="facebookShareBtn"
+                                            th:data-id="${food.id}"
+                                            th:data-name="${food.name}"
+                                            title="Share on Facebook">
+                                        <i class="fab fa-facebook-f me-2"></i>Share
+                                    </button>
+                                    <button class="btn btn-outline-secondary btn-lg" id="instagramShareBtn"
+                                            th:data-id="${food.id}"
+                                            th:data-name="${food.name}"
+                                            title="Share to Instagram or other apps">
+                                        <i class="fab fa-instagram me-2"></i>Share
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -378,6 +396,53 @@
                 tooltipTriggerList.map(function(tooltipTriggerEl) {
                     return new bootstrap.Tooltip(tooltipTriggerEl);
                 });
+            }
+            // Setup share buttons
+            try {
+                const fbBtn = document.getElementById('facebookShareBtn');
+                const igBtn = document.getElementById('instagramShareBtn');
+                const foodId = fbBtn?.dataset?.id || igBtn?.dataset?.id || document.querySelector('[th\\:data-id]')?.dataset?.id;
+                const foodName = fbBtn?.dataset?.name || igBtn?.dataset?.name || document.title;
+
+                function getShareUrl() {
+                    return window.location.origin + '/foods/' + (foodId || '');
+                }
+
+                if (fbBtn) {
+                    fbBtn.addEventListener('click', function () {
+                        const url = encodeURIComponent(getShareUrl());
+                        window.open('https://www.facebook.com/sharer/sharer.php?u=' + url, '_blank', 'noopener,noreferrer,width=700,height=500');
+                    });
+                }
+
+                if (igBtn) {
+                    igBtn.addEventListener('click', async function () {
+                        const url = getShareUrl();
+                        // Prefer Web Share API for mobile apps (can include Instagram)
+                        if (navigator.share) {
+                            try {
+                                await navigator.share({
+                                    title: foodName,
+                                    text: foodName,
+                                    url: url
+                                });
+                                return;
+                            } catch (e) {
+                                // fallthrough to fallback
+                            }
+                        }
+                        // Fallback: copy URL to clipboard and inform user
+                        try {
+                            await navigator.clipboard.writeText(url);
+                            alert('Link copied to clipboard. Paste it into Instagram (or any app) to share.');
+                        } catch (e) {
+                            // last resort: open Instagram website
+                            window.open('https://www.instagram.com/', '_blank', 'noopener,noreferrer');
+                        }
+                    });
+                }
+            } catch (e) {
+                // ignore setup errors
             }
         });
     </script>
