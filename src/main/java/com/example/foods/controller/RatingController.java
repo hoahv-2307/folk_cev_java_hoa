@@ -31,9 +31,6 @@ public class RatingController {
       @PathVariable("id") Long foodId,
       @Valid @RequestBody RatingRequestDto request,
       Authentication authentication) {
-    if (authentication == null || !authentication.isAuthenticated()) {
-      return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-    }
     String username = authentication.getName();
     UserResponseDto user = userService.getUserByUsername(username);
     log.info(
@@ -45,9 +42,6 @@ public class RatingController {
   @GetMapping("/{id}/ratings/me")
   public ResponseEntity<com.example.foods.dto.response.RatingResponseDto> getMyRating(
       @PathVariable("id") Long foodId, Authentication authentication) {
-    if (authentication == null || !authentication.isAuthenticated()) {
-      return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-    }
     UserResponseDto user = userService.getUserByUsername(authentication.getName());
     var dto = ratingService.getUserRating(foodId, user.getId());
     if (dto == null) {

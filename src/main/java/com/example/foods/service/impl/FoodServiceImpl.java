@@ -5,10 +5,10 @@ import com.example.foods.dto.response.FoodResponseDto;
 import com.example.foods.entity.Food;
 import com.example.foods.mapper.FoodMapper;
 import com.example.foods.repository.FoodRepository;
+import com.example.foods.repository.RatingRepository;
 import com.example.foods.service.FileStorageService;
 import com.example.foods.service.FoodService;
 import com.example.foods.service.RatingService;
-
 import java.util.ArrayList;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -26,6 +26,7 @@ public class FoodServiceImpl implements FoodService {
   private final FoodMapper foodMapper;
   private final FileStorageService fileStorageService;
   private final RatingService ratingService;
+  private final RatingRepository ratingRepository;
 
   @Override
   public FoodResponseDto createFood(FoodRequestDto foodDto) {
@@ -71,11 +72,7 @@ public class FoodServiceImpl implements FoodService {
     log.info("Retrieving all foods");
     List<Food> foods = foodRepository.findAll();
     List<FoodResponseDto> dtos = foodMapper.toDtoList(foods);
-    dtos.forEach(
-        d -> {
-          d.setAverageRating(ratingService.getAverageRating(d.getId()));
-          d.setRatingCount(ratingService.getRatingCount(d.getId()));
-        });
+    populateRatings(dtos);
     return dtos;
   }
 
@@ -159,11 +156,7 @@ public class FoodServiceImpl implements FoodService {
     log.info("Retrieving foods by category: {}", category);
     List<Food> foods = foodRepository.findByCategory(category);
     List<FoodResponseDto> dtos = foodMapper.toDtoList(foods);
-    dtos.forEach(
-        d -> {
-          d.setAverageRating(ratingService.getAverageRating(d.getId()));
-          d.setRatingCount(ratingService.getRatingCount(d.getId()));
-        });
+    populateRatings(dtos);
     return dtos;
   }
 
@@ -173,11 +166,7 @@ public class FoodServiceImpl implements FoodService {
     log.info("Searching foods by name: {}", name);
     List<Food> foods = foodRepository.findByNameContainingIgnoreCase(name);
     List<FoodResponseDto> dtos = foodMapper.toDtoList(foods);
-    dtos.forEach(
-        d -> {
-          d.setAverageRating(ratingService.getAverageRating(d.getId()));
-          d.setRatingCount(ratingService.getRatingCount(d.getId()));
-        });
+    populateRatings(dtos);
     return dtos;
   }
 
@@ -192,12 +181,40 @@ public class FoodServiceImpl implements FoodService {
 
     List<Food> foods = foodRepository.findByPriceBetween(minPrice, maxPrice);
     List<FoodResponseDto> dtos = foodMapper.toDtoList(foods);
-    dtos.forEach(
-        d -> {
-          d.setAverageRating(ratingService.getAverageRating(d.getId()));
-          d.setRatingCount(ratingService.getRatingCount(d.getId()));
-        });
+    populateRatings(dtos);
     return dtos;
+  }
+
+  private void populateRatings(List<FoodResponseDto> dtos) {
+    if (dtos == null || dtos.isEmpty()) return;
+    java.util.List<Long> ids = new java.util.ArrayList<>();
+    for (FoodResponseDto d : dtos) {
+      if (d.getId() != null) ids.add(d.getId());
+    }
+    if (ids.isEmpty()) return;
+
+    java.util.List<Object[]> stats = ratingRepository.findStatsByFoodIds(ids);
+    java.util.Map<Long, Double> avgMap = new java.util.HashMap<>();
+    java.util.Map<Long, Long> countMap = new java.util.HashMap<>();
+    if (stats != null) {
+      for (Object[] row : stats) {
+        if (row == null || row.length < 3) continue;
+        Long fid = row[0] == null ? null : ((Number) row[0]).longValue();
+        Double avg = row[1] == null ? 0.0 : ((Number) row[1]).doubleValue();
+        Long cnt = row[2] == null ? 0L : ((Number) row[2]).longValue();
+        if (fid != null) {
+          avgMap.put(fid, avg);
+          countMap.put(fid, cnt);
+        }
+      }
+    }
+
+    for (FoodResponseDto d : dtos) {
+      Double a = avgMap.getOrDefault(d.getId(), 0.0);
+      Long c = countMap.getOrDefault(d.getId(), 0L);
+      d.setAverageRating(a);
+      d.setRatingCount(c);
+    }
   }
 
   private void cleanupUploadedFiles(List<String> fileKeys) {

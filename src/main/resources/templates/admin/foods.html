@@ -181,7 +181,7 @@
                                                   th:text="${food.status}">ACTIVE</span>
                                         </td>
                                         <td>
-                                            <strong th:text="${food.averageRating}">0.0</strong>
+                                            <strong th:text="${#numbers.formatDecimal(food.averageRating, 1, 1)}">0.0</strong>
                                             <small class="text-muted">(<span th:text="${food.ratingCount}">0</span>)</small>
                                         </td>
                                         <td>

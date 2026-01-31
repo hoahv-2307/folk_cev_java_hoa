@@ -31,6 +31,8 @@ class FoodServiceImplTest {
 
   @Mock private FileStorageService fileStorageService;
 
+  @Mock private RatingService ratingService;
+
   @InjectMocks private FoodServiceImpl foodService;
 
   private FoodResponseDto foodResponseDto;

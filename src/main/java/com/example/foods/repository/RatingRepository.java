@@ -18,4 +18,8 @@ public interface RatingRepository extends JpaRepository<Rating, Long> {
   @Query("SELECT r FROM Rating r WHERE r.food.id = :foodId AND r.user.id = :userId")
   java.util.Optional<Rating> findByFoodIdAndUserId(
       @Param("foodId") Long foodId, @Param("userId") Long userId);
+
+  @Query(
+      "SELECT r.food.id, AVG(r.score), COUNT(r) FROM Rating r WHERE r.food.id IN :ids GROUP BY r.food.id")
+  java.util.List<Object[]> findStatsByFoodIds(@Param("ids") java.util.List<Long> ids);
 }

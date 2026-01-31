@@ -302,7 +302,6 @@
                         return;
                     }
                     const comment = document.getElementById('ratingComment').value;
-                    const foodId = submitBtn.dataset.foodId || '0';
                     try{
                         msgEl.style.display='inline'; msgEl.textContent='Saving...'; msgEl.className='text-muted ms-2';
                         const res = await fetch(`/api/foods/${foodId}/ratings`, {

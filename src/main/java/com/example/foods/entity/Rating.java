@@ -6,11 +6,13 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 
 @Entity
 @Table(name = "ratings")
 @Data
 @Builder
+@ToString(exclude = {"food", "user"})
 @NoArgsConstructor
 @AllArgsConstructor
 public class Rating {
