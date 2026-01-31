@@ -11,6 +11,7 @@ import com.example.foods.dto.response.FoodResponseDto;
 import com.example.foods.entity.Food;
 import com.example.foods.mapper.FoodMapper;
 import com.example.foods.repository.FoodRepository;
+import com.example.foods.repository.RatingRepository;
 import com.example.foods.service.impl.FoodServiceImpl;
 import java.util.Arrays;
 import java.util.List;
@@ -32,6 +33,8 @@ class FoodServiceImplTest {
   @Mock private FileStorageService fileStorageService;
 
   @Mock private RatingService ratingService;
+
+  @Mock private RatingRepository ratingRepository;
 
   @InjectMocks private FoodServiceImpl foodService;
 
