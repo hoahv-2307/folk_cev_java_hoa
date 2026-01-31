@@ -130,6 +130,7 @@
                                         <th>Price</th>
                                         <th>Quantity</th>
                                         <th>Status</th>
+                                        <th>Rating</th>
                                         <th>Actions</th>
                                     </tr>
                                 </thead>
@@ -178,6 +179,10 @@
                                             <span class="badge"
                                                   th:class="${food.status == 'ACTIVE'} ? 'badge bg-success' : (${food.status == 'INACTIVE'} ? 'badge bg-warning' : 'badge bg-danger')"
                                                   th:text="${food.status}">ACTIVE</span>
+                                        </td>
+                                        <td>
+                                            <strong th:text="${#numbers.formatDecimal(food.averageRating, 1, 1)}">0.0</strong>
+                                            <small class="text-muted">(<span th:text="${food.ratingCount}">0</span>)</small>
                                         </td>
                                         <td>
                                             <button class="btn btn-sm btn-outline-primary me-1" th:data-food-id="${food.id}" title="Edit">

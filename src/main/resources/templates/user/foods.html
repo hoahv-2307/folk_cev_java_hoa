@@ -44,6 +44,11 @@
                         <a th:href="@{/foods/{id}(id=${food.id})}" class="text-decoration-none">
                             <h5 class="card-title mt-3 mb-2" th:text="${food.name}">Food Name</h5>
                         </a>
+                        <div class="mb-2">
+                            <span class="fw-bold" th:text="${food.averageRating}">0.0</span>
+                            <i class="fas fa-star text-warning"></i>
+                            <small class="text-muted">(<span th:text="${food.ratingCount}">0</span>)</small>
+                        </div>
                         <p class="card-text text-muted mb-3" th:text="${food.description}">Description</p>
                         
                         <!-- Availability Status -->
