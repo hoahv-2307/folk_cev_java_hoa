@@ -56,6 +56,25 @@ public class FileStorageServiceImpl implements FileStorageService {
   }
 
   @Override
+  public String uploadFileToTemp(MultipartFile file) {
+    String uniqueFileName =
+        "temp/"
+            + UUID.randomUUID()
+            + "_"
+            + (file.getOriginalFilename() != null ? file.getOriginalFilename() : "unknown");
+    try {
+      s3Client.putObject(
+          builder -> builder.bucket(bucketName).key(uniqueFileName).build(),
+          software.amazon.awssdk.core.sync.RequestBody.fromBytes(file.getBytes()));
+      log.info("Temp file uploaded successfully: {}", uniqueFileName);
+      return uniqueFileName;
+    } catch (IOException e) {
+      log.error("Failed to upload temp file: {}", uniqueFileName, e);
+      throw new RuntimeException("Failed to upload file", e);
+    }
+  }
+
+  @Override
   public void deleteFile(String filename) {
     try {
       s3Client.deleteObject(builder -> builder.bucket(bucketName).key(filename).build());
@@ -73,6 +92,25 @@ public class FileStorageServiceImpl implements FileStorageService {
       return true;
     } catch (Exception e) {
       return false;
+    }
+  }
+
+  @Override
+  public void moveFile(String sourceKey, String destinationKey) {
+    try {
+      s3Client.copyObject(
+          builder ->
+              builder
+                  .copySource(bucketName + "/" + sourceKey)
+                  .destinationBucket(bucketName)
+                  .destinationKey(destinationKey)
+                  .build());
+      // delete source
+      s3Client.deleteObject(builder -> builder.bucket(bucketName).key(sourceKey).build());
+      log.info("Moved file from {} to {}", sourceKey, destinationKey);
+    } catch (Exception e) {
+      log.error("Failed to move file from {} to {}", sourceKey, destinationKey, e);
+      throw new RuntimeException("Failed to move file", e);
     }
   }
 }
