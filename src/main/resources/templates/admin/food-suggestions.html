@@ -12,7 +12,7 @@
         <a class="btn btn-outline-secondary me-2" th:href="@{/admin/foods}">
           <i class="fas fa-arrow-left me-1"></i>Back to Foods
         </a>
-        <a class="btn btn-primary" th:href="@{/admin/food-suggestions}">
+        <a class="btn btn-primary" th:href="@{/admin/suggestions}">
           <i class="fas fa-refresh me-1"></i>Refresh
         </a>
       </div>
@@ -82,7 +82,7 @@
                 <form th:if="${s.status != 'REJECTED'}" th:action="@{'/admin/food-suggestions/' + ${s.id} + '/process'}" method="post">
                   <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
                   <input type="hidden" name="status" value="REJECT" />
-                  <div class="input-group input-group-sm">
+                  <div class="input-group input-group-sm">reloadqw9e000000000000000009w0er7&!
                     <input type="text" name="adminNote" class="form-control" placeholder="Note (optional)" />
                     <button class="btn btn-danger" type="submit">Reject</button>
                   </div>
