@@ -2,6 +2,22 @@
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
+    <style th:fragment="admin-styles">
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+        }
+        .custom-toast {
+            background: #28a745;
+            color: white;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+    </style>
 </head>
 <body>
     <!-- Admin Navigation Fragment -->
@@ -30,6 +46,11 @@
                     <li class="nav-item">
                         <a class="nav-link" th:href="@{/admin/orders}">
                             <i class="fas fa-receipt me-1"></i>Orders Management
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" th:href="@{/admin/suggestions}">
+                            <i class="fas fa-receipt me-1"></i>Suggestions Management
                         </a>
                     </li>
                     <li class="nav-item">
