@@ -101,11 +101,11 @@ public class FileStorageServiceImpl implements FileStorageService {
       s3Client.copyObject(
           builder ->
               builder
-                  .copySource(bucketName + "/" + sourceKey)
+                  .sourceBucket(bucketName)
+                  .sourceKey(sourceKey)
                   .destinationBucket(bucketName)
                   .destinationKey(destinationKey)
                   .build());
-      // delete source
       s3Client.deleteObject(builder -> builder.bucket(bucketName).key(sourceKey).build());
       log.info("Moved file from {} to {}", sourceKey, destinationKey);
     } catch (Exception e) {

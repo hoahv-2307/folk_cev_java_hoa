@@ -1,5 +1,6 @@
 package com.example.foods.repository;
 
+import com.example.foods.dto.response.FoodAnalyticsResponseDto;
 import com.example.foods.entity.Food;
 import java.util.List;
 import java.util.Optional;
@@ -37,4 +38,11 @@ public interface FoodRepository extends JpaRepository<Food, Long> {
       @Param("maxPrice") Double maxPrice);
 
   boolean existsByNameIgnoreCase(String name);
+
+  @Query(
+      "SELECT new com.example.foods.dto.response.FoodAnalyticsResponseDto("
+          + "f.id, f.name, f.category, f.price, f.viewCount, f.orderCount) "
+          + "FROM Food f "
+          + "ORDER BY f.orderCount DESC, f.viewCount DESC")
+  List<FoodAnalyticsResponseDto> findAllFoodAnalytics();
 }

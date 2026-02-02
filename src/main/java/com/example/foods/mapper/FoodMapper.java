@@ -25,6 +25,8 @@ public interface FoodMapper {
   @Mapping(target = "updatedAt", ignore = true)
   @Mapping(target = "foodImages", ignore = true)
   @Mapping(target = "version", ignore = true)
+  @Mapping(target = "viewCount", ignore = true)
+  @Mapping(target = "orderCount", ignore = true)
   Food toEntity(FoodRequestDto foodDto);
 
   List<FoodResponseDto> toDtoList(List<Food> foods);
@@ -34,6 +36,8 @@ public interface FoodMapper {
   @Mapping(target = "updatedAt", ignore = true)
   @Mapping(target = "foodImages", ignore = true)
   @Mapping(target = "version", ignore = true)
+  @Mapping(target = "viewCount", ignore = true)
+  @Mapping(target = "orderCount", ignore = true)
   void updateEntityFromDto(FoodRequestDto foodDto, @MappingTarget Food food);
 
   FoodImageResponseDto toFoodImageDto(FoodImage foodImage);

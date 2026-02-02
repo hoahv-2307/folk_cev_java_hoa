@@ -47,6 +47,14 @@ public class Food {
   @Builder.Default
   private List<FoodImage> foodImages = new ArrayList<>();
 
+  @Column(name = "view_count", nullable = false)
+  @Builder.Default
+  private Long viewCount = 0L;
+
+  @Column(name = "order_count", nullable = false)
+  @Builder.Default
+  private Long orderCount = 0L;
+
   @Column(name = "created_at")
   private LocalDateTime createdAt;
 
