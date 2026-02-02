@@ -14,7 +14,7 @@ public class FoodAnalyticsSyncScheduler {
 
   private final FoodAnalyticsService foodAnalyticsService;
 
-  @Scheduled(cron = "0 0 * * * *")
+  @Scheduled(cron = "0 * * * * *")
   @SchedulerLock(name = "syncFoodAnalytics", lockAtLeastFor = "PT5M", lockAtMostFor = "PT30M")
   public void syncFoodAnalyticsToDatabase() {
     log.info("Starting scheduled sync of food analytics from Redis to database");

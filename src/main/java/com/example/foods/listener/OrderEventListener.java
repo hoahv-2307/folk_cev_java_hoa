@@ -46,8 +46,17 @@ public class OrderEventListener {
         .getOrder()
         .getItems()
         .forEach(
-            item ->
+            item -> {
+              try {
                 foodAnalyticsService.incrementOrderCount(
-                    item.getFood().getId(), item.getQuantity()));
+                    item.getFood().getId(), item.getQuantity());
+              } catch (Exception e) {
+                log.error(
+                    "Failed to increment order count for Order ID: {}, Food ID: {}",
+                    event.getOrder().getId(),
+                    item.getFood().getId(),
+                    e);
+              }
+            });
   }
 }

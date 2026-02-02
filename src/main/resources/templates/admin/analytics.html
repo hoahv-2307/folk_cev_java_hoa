@@ -105,7 +105,7 @@
                                         <th>Price</th>
                                         <th>View Count</th>
                                         <th>Order Count</th>
-                                        <th>Conversion Rate</th>
+                                        <th>Items per View</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -136,8 +136,9 @@
                                         </td>
                                         <td>
                                             <span class="badge" 
-                                                  th:classappend="${food.viewCount > 0 ? (food.orderCount * 100.0 / food.viewCount >= 10 ? 'bg-success' : (food.orderCount * 100.0 / food.viewCount >= 5 ? 'bg-warning' : 'bg-secondary')) : 'bg-secondary'}"
-                                                  th:text="${food.viewCount > 0 ? #numbers.formatDecimal(food.orderCount * 100.0 / food.viewCount, 1, 1) + '%' : 'N/A'}">0%</span>
+                                                  th:classappend="${food.viewCount > 0 ? (food.orderCount * 1.0 / food.viewCount >= 0.5 ? 'bg-success' : (food.orderCount * 1.0 / food.viewCount >= 0.2 ? 'bg-warning' : 'bg-secondary')) : 'bg-secondary'}"
+                                                  th:text="${food.viewCount > 0 ? #numbers.formatDecimal(food.orderCount * 1.0 / food.viewCount, 1, 2) : 'N/A'}"
+                                                  th:title="'Average items ordered per view (total quantity ÷ views)'">0.00</span>
                                         </td>
                                     </tr>
                                 </tbody>

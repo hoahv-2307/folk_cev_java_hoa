@@ -1,14 +1,16 @@
 package com.example.foods.service.impl;
 
+import com.example.foods.dto.AnalyticsUpdateDto;
 import com.example.foods.dto.response.FoodAnalyticsResponseDto;
 import com.example.foods.repository.FoodRepository;
 import com.example.foods.service.FoodAnalyticsService;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.redis.core.Cursor;
+import org.springframework.data.redis.core.ScanOptions;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.core.namedparam.SqlParameterSource;
@@ -71,40 +73,43 @@ public class FoodAnalyticsServiceImpl implements FoodAnalyticsService {
 
   private Map<Long, Long> getAndClearCountsByPrefix(String prefix) {
     Map<Long, Long> counts = new HashMap<>();
-    Set<String> keys = stringRedisTemplate.keys(prefix + "*");
-
-    if (keys == null || keys.isEmpty()) {
-      return counts;
-    }
-
-    for (String key : keys) {
-      String value = stringRedisTemplate.opsForValue().getAndDelete(key);
-      if (value != null) {
-        try {
-          Long foodId = Long.parseLong(key.replace(prefix, ""));
-          Long count = Long.parseLong(value);
-          counts.put(foodId, count);
-        } catch (NumberFormatException e) {
-          log.warn("Invalid key or value format: {} = {}", key, value);
+    
+    ScanOptions scanOptions = ScanOptions.scanOptions()
+        .match(prefix + "*")
+        .count(100)
+        .build();
+    
+    try (Cursor<String> cursor = stringRedisTemplate.scan(scanOptions)) {
+      while (cursor.hasNext()) {
+        String key = cursor.next();
+        String value = stringRedisTemplate.opsForValue().getAndDelete(key);
+        if (value != null) {
+          try {
+            Long foodId = Long.parseLong(key.replace(prefix, ""));
+            Long count = Long.parseLong(value);
+            counts.put(foodId, count);
+          } catch (NumberFormatException e) {
+            log.warn("Invalid key or value format: {} = {}", key, value);
+          }
         }
       }
+    } catch (Exception e) {
+      log.error("Error scanning Redis keys with prefix: {}", prefix, e);
     }
 
     return counts;
   }
 
   private void batchUpdateAnalytics(Map<Long, Long> viewCounts, Map<Long, Long> orderCounts) {
-    Map<Long, AnalyticsUpdate> updates = new HashMap<>();
+    Map<Long, AnalyticsUpdateDto> updates = new HashMap<>();
 
     viewCounts.forEach(
         (foodId, count) ->
-            updates.computeIfAbsent(foodId, k -> new AnalyticsUpdate(foodId, 0L, 0L)).viewCount =
-                count);
+            updates.computeIfAbsent(foodId, k -> new AnalyticsUpdateDto(foodId, 0L, 0L)).setViewCount(count));
 
     orderCounts.forEach(
         (foodId, count) ->
-            updates.computeIfAbsent(foodId, k -> new AnalyticsUpdate(foodId, 0L, 0L)).orderCount =
-                count);
+            updates.computeIfAbsent(foodId, k -> new AnalyticsUpdateDto(foodId, 0L, 0L)).setOrderCount(count));
 
     if (updates.isEmpty()) {
       return;
@@ -118,29 +123,5 @@ public class FoodAnalyticsServiceImpl implements FoodAnalyticsService {
 
     namedParameterJdbcTemplate.batchUpdate(sql, batchParams);
     log.info("Batch updated {} food analytics records", updates.size());
-  }
-
-  private static class AnalyticsUpdate {
-    Long foodId;
-    Long viewCount;
-    Long orderCount;
-
-    AnalyticsUpdate(Long foodId, Long viewCount, Long orderCount) {
-      this.foodId = foodId;
-      this.viewCount = viewCount;
-      this.orderCount = orderCount;
-    }
-
-    public Long getFoodId() {
-      return foodId;
-    }
-
-    public Long getViewCount() {
-      return viewCount;
-    }
-
-    public Long getOrderCount() {
-      return orderCount;
-    }
   }
 }

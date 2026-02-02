@@ -149,7 +149,11 @@ public class WebController {
   @GetMapping("/foods/{id}")
   public String showFoodDetails(@PathVariable Long id, Model model) {
     model.addAttribute("food", foodService.getFoodById(id));
-    foodAnalyticsService.incrementViewCount(id);
+    try {
+      foodAnalyticsService.incrementViewCount(id);
+    } catch (RuntimeException e) {
+      log.error("Failed to increment view count for food ID {}", id, e);
+    }
     return "user/food-detail";
   }
 
