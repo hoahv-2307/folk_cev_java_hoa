@@ -1,6 +1,7 @@
 package com.example.foods.listener;
 
 import com.example.foods.event.OrderCreatedEvent;
+import com.example.foods.service.FoodAnalyticsService;
 import com.example.foods.service.MailService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -15,6 +16,7 @@ import org.springframework.transaction.event.TransactionalEventListener;
 @AllArgsConstructor
 public class OrderEventListener {
   private final MailService mailService;
+  private final FoodAnalyticsService foodAnalyticsService;
 
   @Value("${spring.application.base-url}")
   private String appBaseUrl;
@@ -35,5 +37,17 @@ public class OrderEventListener {
                 appBaseUrl,
                 event.getOrder().getId());
     mailService.sendSimpleMail("A new order has been placed", emailBody);
+  }
+
+  @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+  public void onOrderCreatedIncrementOrderCount(OrderCreatedEvent event) {
+    log.info("Incrementing order counts for Order ID: {}", event.getOrder().getId());
+    event
+        .getOrder()
+        .getItems()
+        .forEach(
+            item ->
+                foodAnalyticsService.incrementOrderCount(
+                    item.getFood().getId(), item.getQuantity()));
   }
 }

@@ -8,6 +8,7 @@ import com.example.foods.dto.response.UserResponseDto;
 import com.example.foods.entity.FoodSuggestion;
 import com.example.foods.repository.FoodSuggestionRepository;
 import com.example.foods.service.CartService;
+import com.example.foods.service.FoodAnalyticsService;
 import com.example.foods.service.FoodService;
 import com.example.foods.service.OrderService;
 import com.example.foods.service.UserService;
@@ -38,6 +39,7 @@ public class WebController {
   private final OrderService orderService;
   private final CartService cartService;
   private final FoodSuggestionRepository foodSuggestionRepository;
+  private final FoodAnalyticsService foodAnalyticsService;
 
   @GetMapping("/")
   public String home() {
@@ -147,6 +149,7 @@ public class WebController {
   @GetMapping("/foods/{id}")
   public String showFoodDetails(@PathVariable Long id, Model model) {
     model.addAttribute("food", foodService.getFoodById(id));
+    foodAnalyticsService.incrementViewCount(id);
     return "user/food-detail";
   }
 
@@ -321,5 +324,13 @@ public class WebController {
     }
 
     return "redirect:/admin/orders/" + id;
+  }
+
+  @GetMapping("/admin/analytics")
+  public String showFoodAnalytics(Model model, Principal principal) {
+    log.info("Admin viewing food analytics");
+    model.addAttribute("username", principal.getName());
+    model.addAttribute("analytics", foodAnalyticsService.getAllFoodAnalytics());
+    return "admin/analytics";
   }
 }
